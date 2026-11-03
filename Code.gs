@@ -27,7 +27,7 @@ const KINDS = {
 const HEADERS = ['id', 'teamName', 'field', 'devType', 'project', 'leader', 'members',
   'sourceUrl', 'videoUrl', 'salt', 'pwHash',
   'appFileId', 'appFileName', 'appAt', 'repFileId', 'repFileName', 'repAt', 'aiFileId', 'aiFileName', 'aiAt',
-  'createdAt', 'updatedAt'];
+  'createdAt', 'updatedAt', 'workUrl', 'workAt'];
 
 const VOTE_HEADERS = ['voterId', 'voterName', 'teamId', 'at'];
 
@@ -45,7 +45,8 @@ const DEFAULT_SETTINGS = {
   submitOpen: true,
   voteOpen: false,
   voteMode: 'perTeam',      // perTeam: 팀마다 1번씩 / single: 1인 1팀
-  showVotes: true
+  showVotes: true,
+  showcaseDate: '2026-11-17'  // 다른 팀이 작품 링크를 볼 수 있는 날 (대회 당일)
 };
 
 /* ───────── 웹앱 진입 ───────── */
@@ -61,10 +62,10 @@ function doGet() {
 const API = {
   getPublic: getPublic, registerTeam: registerTeam, unlockTeam: unlockTeam,
   uploadTeamFile: uploadTeamFile, removeTeamFile: removeTeamFile, updateTeam: updateTeam, deleteTeam: deleteTeam,
-  myVotes: myVotes, vote: vote,
+  setWorkUrl: setWorkUrl, myVotes: myVotes, vote: vote,
   adminLogin: adminLogin, adminUploadForm: adminUploadForm, adminRemoveForm: adminRemoveForm,
   adminSaveSettings: adminSaveSettings, adminResetPassword: adminResetPassword,
-  adminDeleteTeam: adminDeleteTeam, adminResetVotes: adminResetVotes
+  adminDeleteTeam: adminDeleteTeam, adminResetVotes: adminResetVotes, adminSetFolder: adminSetFolder
 };
 
 function doPost(e) {
@@ -97,6 +98,9 @@ function sheetWith_(ss, name, headers) {
     sh.getRange(1, 1, 2000, headers.length).setNumberFormat('@');
     sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sh.setFrozenRows(1);
+  } else if (sh.getLastColumn() < headers.length) {
+    sh.getRange(1, 1, 2000, headers.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
   }
   return sh;
 }
@@ -213,8 +217,13 @@ function voteCounts_(votesSheet) {
   return c;
 }
 
-function publicTeam_(t, counts) {
+function today_() { return Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'); }
+function showcaseToday_(st) { return !!st.showcaseDate && st.showcaseDate === today_(); }
+
+function publicTeam_(t, counts, reveal) {
   return {
+    hasWork: !!t.workUrl,
+    workUrl: reveal ? (t.workUrl || '') : '',
     id: t.id, teamName: t.teamName, field: t.field, devType: t.devType, project: t.project,
     memberCount: 1 + (t.members ? t.members.split(',').filter(function (x) { return x.trim(); }).length : 0),
     hasApp: !!t.appFileId, hasRep: !!t.repFileId, hasAi: !!t.aiFileId,
@@ -226,6 +235,7 @@ function publicTeam_(t, counts) {
 function detailTeam_(t) {
   const p = publicTeam_(t, null);
   p.leader = t.leader; p.members = t.members; p.sourceUrl = t.sourceUrl; p.videoUrl = t.videoUrl;
+  p.workUrl = t.workUrl || ''; p.workAt = Number(t.workAt) || 0;
   Object.keys(KINDS).forEach(function (k) {
     const c = KINDS[k].col;
     p[k] = t[c + 'FileId'] ? { name: t[c + 'FileName'], url: url_(t[c + 'FileId']), at: Number(t[c + 'At']) } : null;
@@ -240,9 +250,10 @@ function getPublic() {
   const forms = {};
   Object.keys(KINDS).forEach(function (k) { if (f[k]) forms[k] = { name: f[k].name, url: url_(f[k].id), at: f[k].at }; });
   const counts = st.showVotes ? voteCounts_(s.votes) : null;
-  const teams = readTeams_(s.sheet).map(function (t) { return publicTeam_(t, counts); })
+  const reveal = showcaseToday_(st);
+  const teams = readTeams_(s.sheet).map(function (t) { return publicTeam_(t, counts, reveal); })
     .sort(function (a, b) { return a.teamName.localeCompare(b.teamName, 'ko'); });
-  return { settings: st, forms: forms, teams: teams, maxMb: CONFIG.MAX_FILE_MB };
+  return { settings: st, forms: forms, teams: teams, maxMb: CONFIG.MAX_FILE_MB, showcaseToday: reveal, today: today_() };
 }
 
 /* ───────── 팀 기능 ───────── */
@@ -301,6 +312,21 @@ function uploadTeamFile(id, pw, kind, file) {
     const saved = saveFile_(s.folder, KINDS[kind].label, t.teamName + '_' + KINDS[kind].label + '_', file);
     trash_(t[c + 'FileId']);
     t[c + 'FileId'] = saved.id; t[c + 'FileName'] = saved.name; t[c + 'At'] = now; t.updatedAt = now;
+    writeTeam_(s.sheet, t);
+    return detailTeam_(t);
+  });
+}
+
+/* 작품 URL 저장 (빈 값이면 지움) */
+function setWorkUrl(id, pw, url) {
+  return withLock_(function () {
+    const s = store_();
+    const t = findTeam_(s.sheet, id);
+    checkTeam_(t, pw);
+    if (!settings_().submitOpen) throw new Error('작품 제출 기간이 아닙니다.');
+    const u = clean_(url, 300);
+    if (u && !/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(u)) throw new Error('http:// 또는 https:// 로 시작하는 전체 주소를 넣어 주세요.');
+    t.workUrl = u; t.workAt = u ? Date.now() : ''; t.updatedAt = Date.now();
     writeTeam_(s.sheet, t);
     return detailTeam_(t);
   });
@@ -399,8 +425,28 @@ function adminLogin(pw) {
     teams: readTeams_(s.sheet).map(function (t) { const d = detailTeam_(t); d.votes = counts[t.id] || 0; return d; })
       .sort(function (a, b) { return a.teamName.localeCompare(b.teamName, 'ko'); }),
     voterCount: Object.keys(voters).length,
-    sheetUrl: s.ss.getUrl(), folderUrl: s.folder.getUrl()
+    sheetUrl: s.ss.getUrl(), folderUrl: s.folder.getUrl(),
+    folderName: s.folder.getName(), sheetName: s.ss.getName(), live: true
   };
+}
+
+function folderIdFrom_(link) {
+  const s = String(link || '').trim();
+  const m = s.match(/folders\/([A-Za-z0-9_-]{10,})/) || s.match(/[?&]id=([A-Za-z0-9_-]{10,})/) || s.match(/^([A-Za-z0-9_-]{10,})$/);
+  if (!m) throw new Error('드라이브 폴더 주소를 확인해 주세요. (https://drive.google.com/drive/folders/... 형식)');
+  return m[1];
+}
+
+/* 제출물을 저장할 드라이브 폴더를 바꾸기 (이미 받은 파일은 원래 폴더에 남음) */
+function adminSetFolder(pw, link) {
+  checkAdmin_(pw);
+  const id = folderIdFrom_(link);
+  let folder;
+  try { folder = DriveApp.getFolderById(id); folder.getName(); }
+  catch (e) { throw new Error('그 폴더를 열 수 없습니다. 웹 앱을 배포한 구글 계정이 편집할 수 있는 폴더인지 확인해 주세요.'); }
+  props_().setProperty('FOLDER_ID', id);
+  try { DriveApp.getFileById(props_().getProperty('SS_ID')).moveTo(folder); } catch (e) { }
+  return adminLogin(pw);
 }
 
 function adminUploadForm(pw, kind, file) {
@@ -435,7 +481,8 @@ function adminSaveSettings(pw, s) {
     contact: clean_(s.contact, 80),
     registerOpen: !!s.registerOpen, submitOpen: !!s.submitOpen, voteOpen: !!s.voteOpen,
     voteMode: s.voteMode === 'single' ? 'single' : 'perTeam',
-    showVotes: !!s.showVotes
+    showVotes: !!s.showVotes,
+    showcaseDate: /^\d{4}-\d{2}-\d{2}$/.test(String(s.showcaseDate || '')) ? s.showcaseDate : ''
   };
   props_().setProperty('SETTINGS', JSON.stringify(clean));
   return getPublic();
