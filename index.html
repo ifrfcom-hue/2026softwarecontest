@@ -6,7 +6,7 @@
 <title>전곽 SW 경시대회 2026</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- ▼ GitHub 등 외부에 올릴 때: content="" 안에 Apps Script 웹 앱 주소(…/exec)를 붙여 넣으세요. Apps Script 안에서는 비워 둬도 됩니다. -->
-<meta name="sw-api-url" content="">
+<meta name="sw-api-url" content="https://script.google.com/macros/s/AKfycby8r9QAHmGYhH24PlAm_HbZPHmvTH2LFGFb6xslk6Z8XLWkHJZdY6ElCO064OCJ8rxk/exec">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800&display=swap">
@@ -486,7 +486,7 @@ footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:fl
 
 <footer><div class="wrap">
   <span id="contact"></span>
-  <span class="mono" style="color:var(--dim)">ver 11.03-D</span> <button class="linkbtn" id="btnAdmin" type="button">관리자</button>
+  <span class="mono" style="color:var(--dim)">ver 11.03-F</span> <button class="linkbtn" id="btnAdmin" type="button">관리자</button>
 </div></footer>
 </div>
 
@@ -532,8 +532,9 @@ window.addEventListener('error',function(e){ try{ var b=document.getElementById(
 })();
 
 /* ───────── 서버 호출 / 미리보기 ───────── */
-/* 서버 주소: <head>의 <meta name="sw-api-url" content="…/exec"> 에서 읽음 */
-var API_URL = ((document.querySelector('meta[name="sw-api-url"]')||{}).content||'').replace(/[\s'"“”‘’]/g,'');
+/* 서버 주소: <head>의 <meta name="sw-api-url" content="https://script.google.com/macros/s/AKfycby8r9QAHmGYhH24PlAm_HbZPHmvTH2LFGFb6xslk6Z8XLWkHJZdY6ElCO064OCJ8rxk/exec"> 에서 읽음 */
+var DEFAULT_API = 'https://script.google.com/macros/s/AKfycby8r9QAHmGYhH24PlAm_HbZPHmvTH2LFGFb6xslk6Z8XLWkHJZdY6ElCO064OCJ8rxk/exec';
+var API_URL = ((document.querySelector('meta[name="sw-api-url"]')||{}).content||'').replace(/[\s'"“”‘’]/g,'') || DEFAULT_API;
 var GAS = !!(window.google && google.script && google.script.run);
 var REMOTE = !GAS && /^https:\/\/script\.google(usercontent)?\.com\//.test(API_URL);
 var LIVE = GAS || REMOTE;
@@ -665,7 +666,7 @@ function renderForms(forms){
     var f=forms[k], up=f&&f.url&&f.url!=='#';
     var url=up?f.url:formBase()+FORM_FILES[k][0], name=up?f.name:FORM_FILES[k][1];
     return '<div class="form-card"><span class="tag">FORM 0'+(i+1)+'</span><h3>'+KIND[k]+'</h3><ul>'+FORM_INFO[k].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'+
-      '<div class="fn">'+esc(name)+'</div><div><a class="btn sm primary" href="'+esc(url)+'"'+(up?' target="_blank" rel="noopener"':' download="'+esc(name)+'"')+'>양식 내려받기</a></div></div>';
+      '<div class="fn">'+esc(name)+'</div><div><a class="btn sm primary" href="'+esc(url)+'"'+((up||!/\.github\.io$/.test(location.hostname))?' target="_blank" rel="noopener"':' download="'+esc(name)+'"')+'>양식 내려받기</a></div></div>';
   }).join('');
 }
 function renderOffline(){
