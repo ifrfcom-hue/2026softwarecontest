@@ -1,0 +1,883 @@
+<title>전곽 SW 경시대회 2026</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800&display=swap">
+<style>
+/* Layout: 사이버 관제 콘솔 — 회로망 캔버스 위에 모서리를 잘라낸 패널. 상단 탭(대회 안내 / 양식·제출 / 참가 팀 / 팀 평가), 팀은 빌드 상태 배지를 단 타일, 누르면 오른쪽 시트. */
+:root{
+  color-scheme:dark;
+  --bg:#060a18; --bg2:#0b1230; --panel:rgba(13,21,50,.78); --panel-solid:#0d1532; --sunk:rgba(255,255,255,.04);
+  --line:rgba(80,140,255,.22); --line-hi:rgba(53,224,255,.55);
+  --ink:#e2ebff; --muted:#8a9cc4; --dim:#5b6c93;
+  --cyan:#35e0ff; --mag:#ff4fd8; --violet:#8b6bff;
+  --ok:#4dffa6; --ok-soft:rgba(77,255,166,.12); --warn:#ffc85a; --warn-soft:rgba(255,200,90,.12); --bad:#ff6b8b; --bad-soft:rgba(255,107,139,.14);
+  --display:"Black Han Sans","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --latin:"Orbitron","JetBrains Mono",ui-monospace,monospace;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --cut:12px;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--body);-webkit-font-smoothing:antialiased;min-height:100%}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+#bgfx{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.app{position:relative;z-index:2}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{margin:0;text-wrap:balance}
+p{margin:0}
+a{color:var(--cyan)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.tag{font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+.tag.m{color:var(--mag)}
+
+.demo{background:var(--warn-soft);color:var(--warn);font-size:13px;border-bottom:1px solid rgba(255,200,90,.3)}
+.demo .wrap{padding-block:7px}
+
+/* 상단 바 + 탭 */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(6,10,24,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:18px;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.brand .sig{font:800 13px/1 var(--latin);letter-spacing:.12em;color:var(--bg);background:var(--cyan);padding:6px 8px;clip-path:polygon(0 0,100% 0,100% 70%,85% 100%,0 100%)}
+.brand b{font-weight:600;font-size:14px;white-space:nowrap}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{all:unset;cursor:pointer;white-space:nowrap;padding:8px 14px;font-weight:600;font-size:14px;color:var(--muted);border:1px solid transparent;position:relative}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--cyan);border-color:var(--line-hi);background:rgba(53,224,255,.08)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.tab:focus-visible{outline:2px solid var(--cyan)}
+.tab .n{font:600 11px/1 var(--mono);margin-left:6px;color:var(--mag)}
+
+main{padding-block:28px 56px}
+.view{display:grid;gap:22px}
+
+/* 패널 */
+.panel{background:var(--panel);border:1px solid var(--line);padding:22px;clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)));position:relative;min-width:0}
+.panel>h2{font-size:20px;font-weight:700;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.panel>h2 .tag{font-size:10px}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+
+/* 히어로 */
+.hero{padding:34px 28px;border-color:var(--line-hi);background:linear-gradient(120deg,rgba(53,224,255,.08),rgba(255,79,216,.06) 60%,rgba(13,21,50,.8))}
+.hero .tag{margin-bottom:14px;display:block}
+.hero h1{font:400 clamp(36px,7vw,68px)/1.04 var(--display);letter-spacing:-.01em}
+.hero h1 .glow{color:var(--cyan);text-shadow:0 0 18px rgba(53,224,255,.55)}
+.slogan{margin-top:16px;font:600 clamp(15px,2.4vw,20px)/1.5 var(--mono);color:var(--ink)}
+.slogan .k{color:var(--mag)}
+.slogan .cursor{display:inline-block;width:.6em;height:1.05em;background:var(--cyan);vertical-align:-.15em;margin-left:4px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero p.lead{margin-top:14px;max-width:62ch;color:var(--muted)}
+.hero-foot{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-top:22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;font:600 12px/1 var(--mono);padding:7px 10px;border:1px solid var(--line);background:var(--sunk)}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.chip.on{border-color:rgba(77,255,166,.4)} .chip.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.chip.off i{background:var(--bad)}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-hi);background:rgba(53,224,255,.06);padding:10px 16px;font-weight:600;cursor:pointer;text-decoration:none;color:var(--ink);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn:hover{background:rgba(53,224,255,.14)}
+.btn.primary{background:var(--cyan);border-color:var(--cyan);color:#041018}
+.btn.primary:hover{box-shadow:0 0 20px rgba(53,224,255,.5)}
+.btn.hot{background:var(--mag);border-color:var(--mag);color:#1a0414}
+.btn.danger{color:var(--bad);border-color:rgba(255,107,139,.6);background:transparent}
+.btn.danger.armed,.btn.hot.armed{background:var(--bad);color:#1a0408;border-color:var(--bad)}
+.btn.sm{padding:6px 11px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+.linkbtn{background:none;border:0;padding:0;color:var(--dim);text-decoration:underline;cursor:pointer;font-size:13px}
+
+/* 개요 스펙 */
+.spec{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.spec div{background:var(--panel-solid);padding:14px;min-width:0}
+.spec dt{font:600 11px/1 var(--mono);letter-spacing:.1em;color:var(--dim);margin-bottom:8px}
+.spec dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.spec dd small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:baseline}
+.timeline .d{font:600 13px/1.4 var(--mono);color:var(--cyan);min-width:15ch}
+.timeline .l{font-weight:600}
+
+/* 모형 파이프라인 */
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;counter-reset:st}
+.stage{border:1px solid var(--line);background:var(--sunk);padding:14px;display:grid;gap:6px;align-content:start;position:relative;min-width:0}
+.stage .en{font:800 15px/1 var(--latin);letter-spacing:.08em;color:var(--cyan)}
+.stage .ko{font-weight:700}
+.stage dl{margin:6px 0 0;display:grid;gap:4px;font-size:13px}
+.stage dt{color:var(--dim);font:600 10px/1.6 var(--mono);letter-spacing:.1em}
+.stage dd{margin:0 0 4px;color:var(--muted)}
+.stage:not(:last-child)::after{content:"▶";position:absolute;right:-12px;top:16px;font-size:10px;color:var(--cyan);z-index:1}
+.reflect{margin-top:10px;border:1px dashed rgba(255,79,216,.5);padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;font-size:14px}
+.reflect .en{font:800 14px/1 var(--latin);letter-spacing:.08em;color:var(--mag)}
+
+.stmt{font-size:16px;line-height:1.9;border-left:2px solid var(--mag);padding-left:14px}
+.stmt .slot{font:600 13px/1 var(--mono);color:var(--cyan);border:1px solid var(--line-hi);padding:3px 6px;margin:0 2px;white-space:nowrap}
+.example{margin-top:12px;font-size:14px;color:var(--muted);background:var(--sunk);padding:12px 14px}
+
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fcard{border:1px solid var(--line);padding:14px;display:grid;gap:6px;background:var(--sunk)}
+.fcard h3{font-size:16px}
+.fcard .kv{font-size:13px;color:var(--muted)}
+.fcard .kv b{color:var(--ink);font-weight:500}
+ul.dots{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px;color:var(--muted)}
+ul.dots li{padding-left:16px;position:relative}
+ul.dots li::before{content:"";position:absolute;left:2px;top:.7em;width:6px;height:6px;background:var(--cyan)}
+
+.ai-rule{font:400 22px/1.3 var(--display);margin-bottom:14px}
+.ai-rule .glow{color:var(--mag)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font:600 11px/1.4 var(--mono);letter-spacing:.08em;color:var(--dim);background:rgba(255,255,255,.03);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.stage-chip{font:700 11px/1 var(--latin);color:var(--cyan);white-space:nowrap}
+
+.score{display:grid;gap:12px}
+.srow{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 44px;gap:14px;align-items:center}
+.srow .nm{font-weight:600}
+.srow .nm small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.bar{height:10px;background:var(--sunk);border:1px solid var(--line);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--cyan),var(--violet));box-shadow:0 0 10px rgba(53,224,255,.4)}
+.srow .pt{font:700 16px/1 var(--mono);text-align:right}
+details.crit{margin-top:4px;font-size:13px}
+details.crit summary{cursor:pointer;color:var(--cyan);font-size:13px}
+
+.timebar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.timebar div{border:1px solid var(--line);padding:10px 12px;background:var(--sunk)}
+.timebar b{display:block;font:700 18px/1.2 var(--mono);color:var(--cyan)}
+.timebar span{font-size:13px;color:var(--muted)}
+.awards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.award{border:1px solid var(--line);padding:16px;text-align:left;background:var(--sunk)}
+.award b{font:400 22px/1.2 var(--display)}
+.award .n{font:700 28px/1 var(--mono);color:var(--cyan);display:block;margin-top:8px}
+.award:first-child{border-color:rgba(255,79,216,.6)} .award:first-child .n{color:var(--mag)}
+
+/* 양식·제출 */
+.forms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.form-card{border:1px solid var(--line);background:var(--sunk);padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.form-card h3{font-size:17px}
+.form-card .fn{font:12px/1.4 var(--mono);color:var(--muted);word-break:break-all}
+.form-card ul{margin:0;padding-left:18px;font-size:13px;color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s,decimal-leading-zero);font:700 13px/34px var(--mono);text-align:center;border:1px solid var(--line-hi);color:var(--cyan);height:34px}
+.steps b{display:block}
+.steps span{font-size:13px;color:var(--muted)}
+.check{display:grid;gap:8px}
+.check label{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.check input{accent-color:var(--cyan);margin-top:4px}
+
+/* 참가 팀 */
+.bar-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.search{flex:1 1 220px;max-width:340px;padding:10px 12px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.team{all:unset;box-sizing:border-box;cursor:pointer;background:var(--sunk);border:1px solid var(--line);padding:14px;display:grid;gap:8px;min-width:0;position:relative;transition:border-color .15s,background .15s}
+.team::before{content:"";position:absolute;left:0;top:0;width:14px;height:2px;background:var(--cyan)}
+.team:hover{border-color:var(--line-hi);background:rgba(53,224,255,.06)}
+.team:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.team .id{font:600 10px/1 var(--mono);color:var(--dim);letter-spacing:.1em}
+.team .tn{font-weight:700;font-size:18px;line-height:1.25;overflow-wrap:anywhere}
+.team .meta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badges{display:flex;gap:5px;flex-wrap:wrap}
+.badge{font:600 11px/1 var(--mono);padding:5px 7px;border:1px solid var(--line);color:var(--dim)}
+.badge.ok{border-color:rgba(77,255,166,.45);color:var(--ok);background:var(--ok-soft)}
+.badge.late{border-color:rgba(255,200,90,.5);color:var(--warn);background:var(--warn-soft)}
+.empty{border:1px dashed var(--line);padding:30px;text-align:center;color:var(--muted)}
+
+/* 팀 평가 */
+.voter{display:grid;grid-template-columns:minmax(0,140px) minmax(0,160px) auto;gap:10px;align-items:end}
+.vote-list{display:grid;gap:8px}
+.vrow{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,200px) auto;gap:14px;align-items:center;border:1px solid var(--line);background:var(--sunk);padding:12px 14px}
+.vrow .rk{font:700 18px/1 var(--mono);color:var(--dim);text-align:center}
+.vrow:nth-child(1) .rk{color:var(--mag)} .vrow:nth-child(2) .rk,.vrow:nth-child(3) .rk{color:var(--cyan)}
+.vrow .tn{font-weight:700;overflow-wrap:anywhere}
+.vrow .meta{font-size:12px;color:var(--muted)}
+.vbar{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:8px;align-items:center}
+.vbar .pt{font:700 15px/1 var(--mono);text-align:right}
+.vrow.voted{border-color:rgba(77,255,166,.45)}
+.vrow.mine{opacity:.6}
+
+/* 시트 */
+dialog{border:0;padding:0;background:transparent;max-width:100vw;max-height:100vh;width:100%;height:100%;margin:0;color:var(--ink)}
+dialog::backdrop{background:rgba(2,4,12,.72);backdrop-filter:blur(2px)}
+.sheet{position:absolute;right:0;top:0;bottom:0;width:min(540px,100%);background:var(--bg2);border-left:1px solid var(--line-hi);overflow-y:auto;box-shadow:-20px 0 60px rgba(0,0,0,.5);
+  padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 20px;display:grid;gap:16px;align-content:start}
+.sheet.wide{width:min(1000px,100%)}
+.sheet-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.sheet-head h2{font:400 30px/1.15 var(--display);overflow-wrap:anywhere;margin-top:6px}
+.x{all:unset;cursor:pointer;width:38px;height:38px;display:grid;place-items:center;font-size:22px;color:var(--muted);border:1px solid var(--line);flex:none}
+.x:hover{color:var(--ink);border-color:var(--line-hi)}
+.box{border:1px solid var(--line);background:var(--panel-solid);padding:16px;display:grid;gap:12px}
+.box h3{font-size:15px}
+dl.kv{display:grid;grid-template-columns:86px minmax(0,1fr);gap:6px 12px;margin:0;font-size:14px}
+dl.kv dt{color:var(--dim)} dl.kv dd{margin:0;overflow-wrap:anywhere}
+.field{display:grid;gap:6px;min-width:0}
+.field>label,.field>.lb{font-size:13px;font-weight:600}
+.field .hint{font-size:12px;color:var(--muted)}
+.field input[type=text],.field input[type=password],.field input[type=url],.field select,.field textarea,.field input[type=datetime-local]{width:100%;padding:10px 12px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
+.field textarea{min-height:90px;resize:vertical}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.toggles{display:flex;flex-wrap:wrap;gap:8px 18px}
+.toggles label{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+.toggles input{accent-color:var(--cyan)}
+.filebox{display:grid;gap:8px;border:1px solid var(--line);padding:12px;background:rgba(0,0,0,.2)}
+.filebox .top{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.filebox .name{font:12.5px/1.4 var(--mono);overflow-wrap:anywhere;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.err{color:var(--bad);font-size:13px;min-height:1em}
+.err.ok{color:var(--ok)}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.stat{border:1px solid var(--line);padding:10px 12px;background:var(--sunk)}
+.stat b{display:block;font:700 22px/1.2 var(--mono);color:var(--cyan)}
+.stat span{font-size:12px;color:var(--muted)}
+.admin-tbl table{min-width:820px}
+
+footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:13px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-solid);border:1px solid var(--cyan);color:var(--ink);padding:10px 16px;font-size:14px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 0 20px rgba(53,224,255,.3)}
+.loading{opacity:.55;pointer-events:none}
+
+@media (max-width:860px){
+  .spec{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pipe{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stage:not(:last-child)::after{display:none}
+  .forms{grid-template-columns:minmax(0,1fr)}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:600px){
+  .topbar .wrap{flex-wrap:wrap;gap:8px}
+  .tabs{margin-left:0;width:100%}
+  .brand b{font-size:13px}
+  .hero{padding:26px 18px}
+  .panel{padding:18px}
+  .fields,.row2,.awards{grid-template-columns:minmax(0,1fr)}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .srow{grid-template-columns:minmax(0,1fr) 40px}
+  .srow .bar{grid-column:1/-1;grid-row:2}
+  .voter{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .voter .btn{grid-column:1/-1}
+  .vrow{grid-template-columns:32px minmax(0,1fr) auto}
+  .vrow .vbar{grid-column:2/-1;grid-row:2}
+  .timeline li{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="bgfx" aria-hidden="true"></canvas>
+<div class="app">
+<div class="demo" id="demoBar" hidden><div class="wrap">미리보기 모드 · 화면의 팀은 예시이며 저장되지 않습니다. 예시 팀 비밀번호 1234 · 관리자 비밀번호 admin</div></div>
+
+<header class="topbar"><div class="wrap">
+  <div class="brand"><span class="sig">JSHS</span><b>2026 전곽 SW 경시대회</b></div>
+  <nav class="tabs" role="tablist" aria-label="화면 이동">
+    <button class="tab" role="tab" data-tab="guide" aria-selected="true">대회 안내</button>
+    <button class="tab" role="tab" data-tab="submit" aria-selected="false">양식·제출</button>
+    <button class="tab" role="tab" data-tab="teams" aria-selected="false">참가 팀<span class="n" id="tabCount"></span></button>
+    <button class="tab" role="tab" data-tab="vote" aria-selected="false">팀 평가</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+
+<!-- ═════ 대회 안내 ═════ -->
+<section class="view" id="v-guide">
+  <div class="panel hero">
+    <span class="tag">2026 · 프로젝트 부문 · 영재교육정보부</span>
+    <h1>전곽 <span class="glow">소프트웨어</span><br>경시대회</h1>
+    <p class="slogan"><span class="k">&gt;</span> 문제를 찾고, 정의하고, 만들고, 증명하라<span class="cursor"></span></p>
+    <p class="lead" id="notice">대회 정보를 불러오는 중입니다.</p>
+    <div class="hero-foot">
+      <div class="chips" id="statusChips"></div>
+      <div class="cta"><button class="btn primary" type="button" data-go="register">팀 등록하기</button><button class="btn" type="button" data-go="submit">양식 내려받기</button></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>대회 개요 <span class="tag">OVERVIEW</span></h2>
+    <dl class="spec">
+      <div><dt>대상</dt><dd>1, 2학년</dd></div>
+      <div><dt>참가 형태</dt><dd>개인 또는 2~3인 1팀<small>학년 혼합 가능</small></dd></div>
+      <div><dt>제출 기간</dt><dd>신청서 제출기한<small>2026. 11. 4.(수) ~ 2026. 11. 11.(수)</small>작품&amp;산출물 제출<small>2026. 11. 15.(일)</small></dd></div>
+      <div><dt>작품 발표</dt><dd>11. 17.(화) 19:00~<small>발표 순서는 당일 추첨</small></dd></div>
+      <div><dt>장소</dt><dd>코딩실(C.LAB)<small>대기 장소 A.LAB</small></dd></div>
+      <div><dt>운영 시간</dt><dd>팀당 15분<small>발표·질의응답·코드 인터뷰</small></dd></div>
+      <div><dt>심사</dt><dd>정보교사 2명</dd></div>
+      <div><dt>규모</dt><dd>참가 팀 수 제한 없음</dd></div>
+    </dl>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>일정 <span class="tag">SCHEDULE</span></h2>
+      <ol class="timeline" id="schedule"></ol>
+    </div>
+    <div class="panel">
+      <h2>시상 <span class="tag m">AWARDS</span></h2>
+      <div class="awards">
+        <div class="award"><b>최우수상</b><span class="n">1팀</span><span class="muted" style="font-size:13px">발표 심사 1위</span></div>
+        <div class="award"><b>우수상</b><span class="n">2팀</span><span class="muted" style="font-size:13px">발표 심사 2위</span></div>
+        <div class="award"><b>장려상</b><span class="n">3팀</span><span class="muted" style="font-size:13px">발표 심사 3위</span></div>
+      </div>
+      <ul class="dots"><li>학교생활 개선 우수작은 관련 부서와 협의해 시범 운영합니다.</li><li>대외 SW·AI 공모전, R&amp;E·과제연구로 이어 가고 싶은 팀에는 후속 멘토링을 지원합니다.</li></ul>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>문제해결 역량 함양 모형 <span class="tag">PIPELINE</span></h2>
+    <div class="pipe">
+      <div class="stage"><span class="en">FIND</span><span class="ko">① 발견</span><dl><dt>함양 역량</dt><dd>문제 민감성, 관찰·조사</dd><dt>학생 활동</dt><dd>현장 관찰, 설문</dd><dt>산출물</dt><dd>문제 발견 기록</dd></dl></div>
+      <div class="stage"><span class="en">DEFINE</span><span class="ko">② 정의</span><dl><dt>함양 역량</dt><dd>분해·추상화, 문제 구체화</dd><dt>학생 활동</dt><dd>5Why 근본 원인 분석, 문제 정의 문장, 성공 지표 설정</dd><dt>산출물</dt><dd>문제 정의 캔버스</dd></dl></div>
+      <div class="stage"><span class="en">BUILD</span><span class="ko">③ 구현</span><dl><dt>함양 역량</dt><dd>알고리즘 설계, 프로그래밍, 협업</dd><dt>학생 활동</dt><dd>MVP 개발, 커밋·개발 일지 기록</dd><dt>산출물</dt><dd>시제품, 소스코드</dd></dl></div>
+      <div class="stage"><span class="en">PROVE</span><span class="ko">④ 증명</span><dl><dt>함양 역량</dt><dd>검증 설계, 데이터 해석, 소통</dd><dt>학생 활동</dt><dd>사용자 테스트, 성능 측정, 전·후 비교</dd><dt>산출물</dt><dd>검증 결과표, 결과 보고서</dd></dl></div>
+    </div>
+    <div class="reflect"><span class="en">⟲ REFLECT</span><b>성찰</b><span class="muted">단계마다 성찰 일지를 씁니다. 검증 결과가 목표에 못 미치면 정의·구현 단계로 돌아가는 것도 정상적인 문제해결 과정으로 인정하고 평가에 반영합니다.</span></div>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>문제 정의 문장 <span class="tag">PROBLEM STATEMENT</span></h2>
+      <p class="stmt"><span class="slot">누가</span>는 <span class="slot">어떤 상황</span>에서 <span class="slot">원인</span> 때문에 <span class="slot">어려움</span>을 겪는다. 우리는 <span class="slot">해결책</span>으로 <span class="slot">지표</span>를 <span class="slot">목표치</span>만큼 개선한다.</p>
+      <p class="example"><b style="color:var(--ink)">예시</b> 기숙사 1학년 학생은 저녁 자습 전 세탁기 빈자리를 알 수 없어 평균 15분을 대기한다. 우리는 실시간 예약 앱으로 대기 시간을 5분 이내로 단축한다.</p>
+      <p class="muted" style="font-size:13px;margin-top:10px">문제 정의 캔버스와 결과보고서 첫머리에 이 형식으로 적습니다.</p>
+    </div>
+    <div class="panel">
+      <h2>출품 분야 <span class="tag">FIELDS</span></h2>
+      <p class="muted" style="font-size:14px;margin-bottom:12px">공통 주제 「우리 주변의 진짜 문제를 소프트웨어로 해결하라」 · 주제는 지정하지 않습니다.</p>
+      <div class="fields">
+        <div class="fcard"><h3>학교생활 개선</h3><div class="kv">탐색 영역 <b>기숙사, 급식실, 학사 운영</b></div><div class="kv">예시 <b>세탁기·실험실 예약 중복, 대기 시간 과다</b></div><div class="kv">지표 <b>대기 시간, 사용자 만족도</b></div></div>
+        <div class="fcard"><h3>교육활동 개선</h3><div class="kv">탐색 영역 <b>교육활동 전반</b></div><div class="kv">예시 <b>수업자료 정리로 학습 효율 높이기</b></div><div class="kv">지표 <b>과제 완료 시간, 오류 횟수</b></div></div>
+      </div>
+      <ul class="dots"><li>웹, 앱, 데스크톱, AI 모델, 피지컬 컴퓨팅 결합 등 개발 형태 제한 없음</li><li>기존 공모전·수행평가 결과물 재출품 금지 (발전시킨 경우 변경 내용 명시)</li><li>실제 사용자를 만나 검증할 수 있는 주제 권장</li></ul>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>생성형 AI 활용 기준 <span class="tag m">AI POLICY</span></h2>
+    <p class="ai-rule">「AI는 동료, <span class="glow">판단은 학생</span>」</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>단계</th><th>권장 활용</th><th>유의 사항</th></tr></thead>
+      <tbody>
+        <tr><td><span class="stage-chip">FIND·DEFINE</span></td><td>질문 다듬기, 자료 조사 보조</td><td>AI가 제안한 문제를 그대로 주제로 채택하지 않고, 실제 사용자를 통해 확인합니다.</td></tr>
+        <tr><td><span class="stage-chip">BUILD</span></td><td>코드 작성 보조, 오류 해결, 대안 설계 비교</td><td>생성된 코드는 이해한 뒤 반영하며, 설명할 수 없는 코드는 쓰지 않습니다.</td></tr>
+        <tr><td><span class="stage-chip">PROVE</span></td><td>테스트 사례 구상, 보고서 문장 교정</td><td>검증 데이터와 결과는 직접 측정한 값만 씁니다.</td></tr>
+      </tbody>
+    </table></div>
+    <ul class="dots">
+      <li><b style="color:var(--ink)">기록 의무</b> AI 활용 기록지에 사용 도구, 주요 프롬프트, AI 결과의 수정·검증 내용을 적습니다. AI 오류 수정 사례 1건 이상 권장.</li>
+      <li><b style="color:var(--ink)">설명 의무</b> 코드 인터뷰에서 심사위원이 지정한 코드를 팀원 누구나 설명할 수 있어야 합니다.</li>
+      <li><b style="color:var(--bad)">제재</b> AI 활용 은폐, 기록 허위 작성, 도용·대리 개발은 실격. 핵심 로직을 설명하지 못하면 해당 항목 0~5점.</li>
+    </ul>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>평가 기준 <span class="tag">100 POINTS</span></h2>
+      <div class="score" id="score"></div>
+    </div>
+    <div class="panel">
+      <h2>발표 심사 <span class="tag">15 MIN / TEAM</span></h2>
+      <div class="timebar">
+        <div><b>5′</b><span>문제해결 과정 발표<br>발견→정의→구현(시연)→증명</span></div>
+        <div><b>5′</b><span>질의응답<br>문제 근거·검증 방법</span></div>
+        <div><b>5′</b><span>코드 인터뷰<br>지정코드 설명</span></div>
+      </div>
+      <p class="muted" style="font-size:13px;margin-top:12px">발표에 ‘처음 계획과 달라진 점’을 꼭 넣고, 시연 실패에 대비해 시연 영상을 미리 준비합니다.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>유의사항 <span class="tag">NOTICE</span></h2>
+    <ul class="dots" style="margin-top:0">
+      <li><b style="color:var(--ink)">개인정보 보호</b> 면담·설문 자료에 실명을 적지 않으며, 개인정보를 다루는 프로젝트는 가상 데이터를 씁니다.</li>
+      <li><b style="color:var(--ink)">저작권 준수</b> 외부 라이브러리·공개 데이터·오픈소스 코드·이미지는 라이선스를 확인하고 출처를 결과보고서에 밝힙니다.</li>
+      <li><b style="color:var(--ink)">안전 관리</b> 피지컬 컴퓨팅 작품은 전원·배선 안전 수칙을 지키고, 코딩실은 지도교사 입회하에 사용합니다.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═════ 양식·제출 ═════ -->
+<section class="view" id="v-submit" hidden>
+  <div class="panel">
+    <h2>제출 양식 <span class="tag">FORMS</span></h2>
+    <div class="forms" id="forms"></div>
+  </div>
+  <div class="cols">
+    <div class="panel">
+      <h2>제출 방법 <span class="tag">HOW TO</span></h2>
+      <ol class="steps">
+        <li><div><b>양식 내려받기</b><span>참가 신청서, 결과보고서, AI 활용 기록지를 받습니다.</span></div></li>
+        <li><div><b>팀 등록 + 참가 신청서 (~11. 11.(수))</b><span>팀명과 팀 비밀번호를 정하고 신청서를 올립니다.</span></div></li>
+        <li><div><b>팀명 누르고 비밀번호 입력</b><span>‘참가 팀’ 탭에서 우리 팀을 열면 파일을 올리고, 바꾸고, 지울 수 있습니다.</span></div></li>
+        <li><div><b>결과보고서 · AI 활용 기록지 · 링크</b><span>소스코드(GitHub) 주소와 3분 이내 시연 영상 링크도 함께 적습니다.</span></div></li>
+        <li><div><b>작품&amp;산출물 마감 11. 15.(일) 23:59</b><span>마감 이후 제출물은 심사 때 감점합니다.</span></div></li>
+      </ol>
+      <div class="actions" style="margin-top:16px"><button class="btn primary" type="button" data-go="register">팀 등록하기</button><button class="btn" type="button" data-go="teams">우리 팀 찾기</button></div>
+    </div>
+    <div class="panel">
+      <h2>제출 전 확인 <span class="tag">CHECKLIST</span></h2>
+      <div class="check" id="checklist">
+        <label><input type="checkbox" id="ck1"> 소스코드 README에 실행 방법을 적었다.</label>
+        <label><input type="checkbox" id="ck2"> 시연 영상이 3분 이내이며 핵심 기능이 보인다.</label>
+        <label><input type="checkbox" id="ck3"> AI 활용 기록지를 함께 제출한다.</label>
+        <label><input type="checkbox" id="ck4"> 외부 자료·코드의 출처와 라이선스를 모두 밝혔다.</label>
+        <label><input type="checkbox" id="ck5"> 양식의 회색 안내 문구를 모두 지웠다.</label>
+        <label><input type="checkbox" id="ck6"> 결과보고서는 표지 포함 5쪽 이내, 글자 크기 10~11pt다.</label>
+      </div>
+      <p class="muted" style="font-size:12px;margin-top:12px">이 체크는 스스로 점검하는 용도이며 제출되지 않습니다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ 참가 팀 ═════ -->
+<section class="view" id="v-teams" hidden>
+  <div class="panel">
+    <h2>참가 팀 <span class="tag" id="teamCount"></span></h2>
+    <p class="muted" style="font-size:14px;margin:-6px 0 16px">팀명을 누르면 제출 현황을 볼 수 있습니다. 팀 비밀번호를 넣으면 우리 팀 자료를 올리고, 고치고, 지울 수 있습니다.</p>
+    <div class="bar-row">
+      <input class="search" id="search" type="search" placeholder="팀명·프로젝트 검색" aria-label="팀 검색">
+      <div class="legend"><span><span class="badge ok">✓</span> 제출</span><span><span class="badge">–</span> 미제출</span></div>
+    </div>
+    <div class="grid" id="teams"></div>
+  </div>
+</section>
+
+<!-- ═════ 팀 평가 ═════ -->
+<section class="view" id="v-vote" hidden>
+  <div class="panel">
+    <h2>팀 평가 <span class="tag m">VOTE</span></h2>
+    <p class="muted" style="font-size:14px;margin-bottom:6px">「가장 사용하고 싶은 소프트웨어」에 투표해 주세요. <b style="color:var(--ink)" id="voteRule"></b></p>
+    <p class="muted" style="font-size:13px;margin-bottom:16px">투표는 되돌릴 수 없고, 우리 팀에는 투표할 수 없습니다. 심사 점수와는 별개입니다.</p>
+    <form class="voter" id="voterForm" autocomplete="off">
+      <div class="field"><label for="vt_id">학번</label><input type="text" id="vt_id" inputmode="numeric" maxlength="5" placeholder="10101" required></div>
+      <div class="field"><label for="vt_name">이름</label><input type="text" id="vt_name" maxlength="10" required></div>
+      <button class="btn primary" type="submit" id="vt_btn">투표 시작</button>
+    </form>
+    <div class="err" id="vt_err" style="margin-top:8px"></div>
+  </div>
+  <div class="panel">
+    <h2 id="voteHead">투표 현황</h2>
+    <div class="vote-list" id="voteList"></div>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="wrap">
+  <span id="contact"></span>
+  <button class="linkbtn" id="btnAdmin" type="button">관리자</button>
+</div></footer>
+</div>
+
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ───────── 배경: 사이버 회로망 ───────── */
+(function(){
+  var c=document.getElementById('bgfx'), x=c.getContext('2d'), W=0, H=0, dpr=1, nodes=[], t=0;
+  var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function size(){ dpr=Math.min(window.devicePixelRatio||1,2); W=c.clientWidth; H=c.clientHeight; c.width=W*dpr; c.height=H*dpr; x.setTransform(dpr,0,0,dpr,0,0);
+    var n=Math.round(Math.min(70,W*H/22000)); nodes=[];
+    for(var i=0;i<n;i++) nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,m:Math.random()<.18}); }
+  function draw(){
+    x.clearRect(0,0,W,H);
+    var g=x.createRadialGradient(W*.15,H*.05,0,W*.15,H*.05,Math.max(W,H)*.8); g.addColorStop(0,'rgba(53,224,255,.10)'); g.addColorStop(1,'rgba(6,10,24,0)'); x.fillStyle=g; x.fillRect(0,0,W,H);
+    var g2=x.createRadialGradient(W*.9,H*.85,0,W*.9,H*.85,Math.max(W,H)*.6); g2.addColorStop(0,'rgba(255,79,216,.08)'); g2.addColorStop(1,'rgba(6,10,24,0)'); x.fillStyle=g2; x.fillRect(0,0,W,H);
+    /* 원근 그리드 바닥 */
+    var hz=H*.62; x.strokeStyle='rgba(80,140,255,.10)'; x.lineWidth=1; x.beginPath();
+    for(var i=-20;i<=20;i++){ x.moveTo(W/2+i*40,hz); x.lineTo(W/2+i*220,H); }
+    var off=(t*0.6)%1;
+    for(var j=0;j<14;j++){ var p=(j+off)/14, y=hz+(H-hz)*p*p; x.moveTo(0,y); x.lineTo(W,y); }
+    x.stroke();
+    /* 노드 + 회로선 */
+    for(var a=0;a<nodes.length;a++){ var A=nodes[a];
+      for(var b=a+1;b<nodes.length;b++){ var B=nodes[b], dx=A.x-B.x, dy=A.y-B.y, d=dx*dx+dy*dy;
+        if(d<140*140){ var al=(1-Math.sqrt(d)/140)*.28; x.strokeStyle='rgba(53,224,255,'+al+')'; x.beginPath(); x.moveTo(A.x,A.y); x.lineTo(B.x,A.y); x.lineTo(B.x,B.y); x.stroke(); } } }
+    for(var k=0;k<nodes.length;k++){ var N=nodes[k]; x.fillStyle=N.m?'rgba(255,79,216,.85)':'rgba(53,224,255,.75)'; x.fillRect(N.x-1.5,N.y-1.5,3,3);
+      if(!still){ N.x+=N.vx; N.y+=N.vy; if(N.x<0||N.x>W) N.vx*=-1; if(N.y<0||N.y>H) N.vy*=-1; } }
+  }
+  function loop(){ t+=0.016; draw(); if(!still && !document.hidden) requestAnimationFrame(loop); }
+  window.addEventListener('resize',function(){ size(); draw(); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && !still) requestAnimationFrame(loop); });
+  size(); still ? draw() : loop();
+})();
+
+/* ───────── 서버 호출 / 미리보기 ───────── */
+var LIVE = !!(window.google && google.script && google.script.run);
+function api(fn){
+  var args=Array.prototype.slice.call(arguments,1);
+  if(LIVE) return new Promise(function(res,rej){ var r=google.script.run.withSuccessHandler(res).withFailureHandler(function(e){ rej(new Error((e&&e.message)||String(e))); }); r[fn].apply(r,args); });
+  return new Promise(function(res,rej){ setTimeout(function(){ try{ res(JSON.parse(JSON.stringify(DEMO[fn].apply(null,args)))); }catch(e){ rej(e); } },200); });
+}
+
+/* 미리보기용 가짜 서버 (배포본에서는 쓰지 않음) */
+var DEMO=(function(){
+  var now=Date.now(), H=3600e3, D=24*H;
+  var settings={notice:'학생이 실제 문제를 스스로 발견하고 소프트웨어로 해결한 뒤, 그 효과를 증명하는 전 과정을 평가하는 문제해결 역량 중심 프로젝트 경시대회입니다.',
+    schedule:[{date:'11. 4.(수) ~ 11. 11.(수)',label:'참가 신청서 제출'},{date:'11. 15.(일)',label:'작품&산출물 제출 마감'},{date:'11. 16.(월)',label:'서류 검토 · 발표 순서 안내'},{date:'11. 17.(화) 19:00 ~',label:'발표 심사 · 관람 학생 투표'}],
+    deadline:'2026-11-15T23:59',contact:'영재교육정보부 정보과',registerOpen:true,submitOpen:true,voteOpen:true,voteMode:'perTeam',showVotes:true};
+  var forms={apply:{name:'2026 전곽 SW경진대회 참가신청서.hwpx',url:'#',at:now-D},report:{name:'2026 전곽 SW경진대회 결과보고서.hwpx',url:'#',at:now-D},ai:{name:'AI 활용 기록지.hwpx',url:'#',at:now-D}};
+  var teams=[
+    {id:'a1c9e2f0',teamName:'(예시) 세탁레이더',field:'학교생활 개선',devType:'앱',project:'기숙사 세탁기 실시간 예약',leader:'10101 김예시',members:'10102 이예시, 20103 박예시',sourceUrl:'https://github.com/example/laundry',videoUrl:'',pw:'1234',apply:{name:'세탁레이더_신청서.hwpx',url:'#',at:now-2*D},report:{name:'세탁레이더_결과보고서.pdf',url:'#',at:now-5*H},ai:{name:'세탁레이더_AI기록지.hwpx',url:'#',at:now-5*H},updatedAt:now-5*H},
+    {id:'b72d10aa',teamName:'(예시) 실험노트봇',field:'교육활동 개선',devType:'AI 모델',project:'실험 측정값 자동 정리 챗봇',leader:'20201 최예시',members:'',sourceUrl:'',videoUrl:'',pw:'1234',apply:{name:'실험노트봇_신청서.pdf',url:'#',at:now-D},report:null,ai:null,updatedAt:now-D},
+    {id:'c33f8e01',teamName:'(예시) 급식잔반 0',field:'학교생활 개선',devType:'웹',project:'잔반 데이터로 메뉴 선호도 분석',leader:'10305 정예시',members:'10306 한예시',sourceUrl:'',videoUrl:'',pw:'1234',apply:{name:'급식잔반0_신청서.hwpx',url:'#',at:now-3*H},report:null,ai:null,updatedAt:now-3*H}
+  ];
+  var votes=[{v:'10201',t:'a1c9e2f0'},{v:'10202',t:'a1c9e2f0'},{v:'10203',t:'b72d10aa'},{v:'20210',t:'a1c9e2f0'},{v:'20211',t:'c33f8e01'}];
+  function cnt(id){ return votes.filter(function(v){return v.t===id;}).length; }
+  function pub(t){ return {id:t.id,teamName:t.teamName,field:t.field,devType:t.devType,project:t.project,memberCount:1+(t.members?t.members.split(',').filter(function(s){return s.trim();}).length:0),hasApp:!!t.apply,hasRep:!!t.report,hasAi:!!t.ai,votes:settings.showVotes?cnt(t.id):null,updatedAt:t.updatedAt}; }
+  function det(t){ var p=pub(t); p.votes=null; ['leader','members','sourceUrl','videoUrl','apply','report','ai'].forEach(function(k){p[k]=t[k];}); return p; }
+  function find(id){ var t=teams.filter(function(x){return x.id===id;})[0]; if(!t) throw new Error('팀을 찾을 수 없습니다.'); return t; }
+  function chk(t,pw){ if(String(pw)!==t.pw) throw new Error('비밀번호가 맞지 않습니다.'); }
+  function adm(pw){ if(pw!=='admin') throw new Error('비밀번호가 맞지 않습니다.'); }
+  function info(t,i){ if(!i.teamName) throw new Error('팀명을 입력하세요.'); if(!i.leader) throw new Error('대표 학생(학번 이름)을 입력하세요.'); if(i.members && i.members.split(',').filter(function(s){return s.trim();}).length>2) throw new Error('팀은 최대 3명(대표 포함)까지입니다.'); ['teamName','field','devType','project','leader','members','sourceUrl','videoUrl'].forEach(function(k){t[k]=i[k]||'';}); }
+  function voter(id,name){ id=String(id||'').replace(/\D/g,''); if(!/^\d{5}$/.test(id)) throw new Error('학번 5자리를 입력하세요. (예: 10101)'); if(!String(name||'').trim()) throw new Error('이름을 입력하세요.'); return id; }
+  function getPublic(){ return {settings:settings,forms:forms,teams:teams.map(pub).sort(function(a,b){return a.teamName.localeCompare(b.teamName,'ko');}),maxMb:20}; }
+  return {
+    getPublic:getPublic,
+    registerTeam:function(i,f){ if(String(i.password||'').length<4) throw new Error('비밀번호는 4자 이상으로 정해 주세요.'); if(teams.some(function(t){return t.teamName===i.teamName;})) throw new Error('이미 등록된 팀명입니다. 다른 팀명을 정해 주세요.');
+      var t={id:Math.random().toString(16).slice(2,10),pw:i.password,apply:f?{name:f.name,url:'#',at:Date.now()}:null,report:null,ai:null,updatedAt:Date.now()}; info(t,i); teams.push(t); return det(t); },
+    unlockTeam:function(id,pw){ var t=find(id); chk(t,pw); return det(t); },
+    uploadTeamFile:function(id,pw,k,f){ var t=find(id); chk(t,pw); t[k]={name:f.name,url:'#',at:Date.now()}; t.updatedAt=Date.now(); return det(t); },
+    removeTeamFile:function(id,pw,k){ var t=find(id); chk(t,pw); t[k]=null; t.updatedAt=Date.now(); return det(t); },
+    updateTeam:function(id,pw,i){ var t=find(id); chk(t,pw); info(t,i); if(i.newPassword) t.pw=i.newPassword; t.updatedAt=Date.now(); return det(t); },
+    deleteTeam:function(id,pw){ var t=find(id); chk(t,pw); teams=teams.filter(function(x){return x!==t;}); return true; },
+    myVotes:function(id,name){ id=voter(id,name); return votes.filter(function(v){return v.v===id;}).map(function(v){return v.t;}); },
+    vote:function(id,name,tid){ if(!settings.voteOpen) throw new Error('지금은 투표 시간이 아닙니다.'); id=voter(id,name); var t=find(tid);
+      if(((t.leader+','+t.members).match(/\d{5}/g)||[]).indexOf(id)>=0) throw new Error('우리 팀에는 투표할 수 없습니다.');
+      var mine=votes.filter(function(v){return v.v===id;}); if(mine.some(function(v){return v.t===tid;})) throw new Error('이 팀에는 이미 투표했습니다.');
+      if(settings.voteMode==='single'&&mine.length) throw new Error('이미 한 팀에 투표했습니다. (1인 1팀)');
+      votes.push({v:id,t:tid}); var o=getPublic(); o.myVotes=mine.map(function(v){return v.t;}).concat([tid]); return o; },
+    adminLogin:function(pw){ adm(pw); var vs={}; votes.forEach(function(v){vs[v.v]=1;}); return {teams:teams.map(function(t){var d=det(t); d.votes=cnt(t.id); return d;}),voterCount:Object.keys(vs).length,sheetUrl:'#',folderUrl:'#'}; },
+    adminUploadForm:function(pw,k,f){ adm(pw); forms[k]={name:f.name,url:'#',at:Date.now()}; return getPublic(); },
+    adminRemoveForm:function(pw,k){ adm(pw); delete forms[k]; return getPublic(); },
+    adminSaveSettings:function(pw,s){ adm(pw); settings=s; return getPublic(); },
+    adminResetPassword:function(pw,id,np){ adm(pw); find(id).pw=np; return true; },
+    adminDeleteTeam:function(pw,id){ adm(pw); teams=teams.filter(function(x){return x.id!==id;}); votes=votes.filter(function(v){return v.t!==id;}); return true; },
+    adminResetVotes:function(pw){ adm(pw); votes=[]; return true; }
+  };
+})();
+
+/* ───────── 상태 & 도우미 ───────── */
+var S={pub:null,keys:{},admin:null,tab:'guide',voter:null,myVotes:[]};
+var $=function(id){ return document.getElementById(id); };
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmt(ms){ if(!ms) return ''; var d=new Date(Number(ms)), p=function(n){return ('0'+n).slice(-2);}; return (d.getMonth()+1)+'. '+d.getDate()+'. '+p(d.getHours())+':'+p(d.getMinutes()); }
+function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){ return null; } }
+var KIND={apply:'참가 신청서',report:'결과보고서',ai:'AI 활용 기록지'};
+var KIND_SHORT={apply:'신청서',report:'보고서',ai:'AI기록'};
+var FORM_INFO={
+  apply:['기본 정보 · 참가 분야 · 개발 형태','팀원 정보 (2~3인 또는 1인)','해결하려는 문제 · 대상 사용자 · 해결 아이디어','참가 서약 및 개인정보 동의'],
+  report:['프로젝트 요약 · 문제 정의 · 해결 방안','개발 과정 · 역할 분담 · 기여도','검증 결과 · 한계 및 개선 방향','AI 활용 요약 · 참고 자료와 라이선스'],
+  ai:['사용한 AI 도구 · 작성 기간','활용 내역 (F·D·B·P 단계별)','AI 오류 발견·수정 사례 1건 이상','단계별 자기 점검 · 성찰 · 서약']
+};
+var FIELDS=['학교생활 개선','교육활동 개선'];
+var DEVTYPES=['웹','앱','데스크톱','AI 모델','피지컬 컴퓨팅','기타'];
+var SCORE=[['① 문제 발견·정의','문제의 실재성, 근거, 대상 사용자, 성공 지표',25,'문제의 실재성을 입증하고, 근본 원인과 측정 가능한 성공 지표를 제시함','문제가 모호하거나 근거 없이 해결책을 먼저 제시함'],
+  ['② 설계·구현','핵심 기능, 알고리즘·자료구조 선택의 타당성, 코드 품질',25,'필요한 기능이 안정적으로 동작하고, 설계 선택의 근거를 대안과 비교해 설명함','주요 기능이 동작하지 않거나 문제와 무관한 기능 위주로 구현함'],
+  ['③ 검증·개선','검증 설계, 데이터 해석, 개선 반영',20,'전·후 비교나 사용자 테스트로 효과를 정량 제시하고 개선 과정이 드러남','효과 검증 없이 기능 나열에 그침'],
+  ['④ 코드 이해·설명','코드 인터뷰, AI 활용의 투명성',15,'지정 코드의 동작 원리와 설계 이유를 팀원 모두 설명하고, AI 결과 검증 사례를 제시함','핵심 로직을 설명하지 못함'],
+  ['⑤ 소통·성찰','발표 전달력, 시연, 협업, 한계 인식',15,'문제부터 검증까지 논리적으로 전달하고 한계와 개선 방향을 스스로 제시함','전달이 불명확하거나 한계를 인식하지 못함']];
+var toastT;
+function toast(m){ var t=$('toast'); t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(function(){t.hidden=true;},2800); }
+function busy(el,on){ if(el) el.classList.toggle('loading',!!on); }
+function opts(list,sel){ return list.map(function(f){ return '<option'+(f===sel?' selected':'')+'>'+esc(f)+'</option>'; }).join(''); }
+function readFile(input){
+  var f=input&&input.files&&input.files[0]; if(!f) return Promise.resolve(null);
+  var max=(S.pub?S.pub.maxMb:20)*1048576;
+  if(f.size>max) return Promise.reject(new Error((max/1048576)+'MB 이하 파일만 올릴 수 있습니다.'));
+  return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ res({name:f.name,mimeType:f.type||'application/octet-stream',data:String(fr.result).split(',')[1]}); }; fr.onerror=function(){ rej(new Error('파일을 읽지 못했습니다.')); }; fr.readAsDataURL(f); });
+}
+function deadlineMs(){ var d=S.pub&&S.pub.settings.deadline; var ms=d?new Date(d).getTime():NaN; return isNaN(ms)?null:ms; }
+function isLate(at){ var d=deadlineMs(); return !!(d&&at&&Number(at)>d+59999); }
+function armed(btn,label){
+  if(btn.classList.contains('armed')) return true;
+  btn.classList.add('armed'); var old=btn.textContent; btn.textContent=label||'한 번 더 누르면 삭제';
+  setTimeout(function(){ if(btn.isConnected){ btn.classList.remove('armed'); btn.textContent=old; } },3500); return false;
+}
+
+/* ───────── 탭 ───────── */
+function setTab(name){
+  S.tab=name;
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){ b.setAttribute('aria-selected',String(b.dataset.tab===name)); });
+  ['guide','submit','teams','vote'].forEach(function(v){ $('v-'+v).hidden=(v!==name); });
+  window.scrollTo(0,0);
+}
+document.querySelector('.tabs').addEventListener('click',function(e){ var b=e.target.closest('.tab'); if(b) setTab(b.dataset.tab); });
+document.addEventListener('click',function(e){ var g=e.target.closest('[data-go]'); if(!g) return; var to=g.dataset.go; if(to==='register') openRegister(); else setTab(to); });
+
+/* ───────── 공개 화면 ───────── */
+function load(){ return api('getPublic').then(function(p){ S.pub=p; renderAll(); }).catch(function(e){ $('notice').textContent='정보를 불러오지 못했습니다. 새로고침해 주세요. ('+e.message+')'; }); }
+
+function renderAll(){
+  var p=S.pub, s=p.settings;
+  $('notice').textContent=s.notice;
+  $('statusChips').innerHTML=
+    '<span class="chip '+(s.registerOpen?'on':'off')+'"><i></i>팀 등록 '+(s.registerOpen?'접수 중':'마감')+'</span>'+
+    '<span class="chip '+(s.submitOpen?'on':'off')+'"><i></i>작품 제출 '+(s.submitOpen?'접수 중':'마감')+'</span>'+
+    '<span class="chip '+(s.voteOpen?'on':'off')+'"><i></i>팀 평가 '+(s.voteOpen?'진행 중':'대기')+'</span>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-go="register"]'),function(b){ b.disabled=!s.registerOpen; });
+  $('schedule').innerHTML=(s.schedule||[]).map(function(x){ return '<li><span class="d">'+esc(x.date)+'</span><span class="l">'+esc(x.label)+'</span></li>'; }).join('')||'<li class="muted">일정이 아직 등록되지 않았습니다.</li>';
+  $('score').innerHTML=SCORE.map(function(r){ return '<div><div class="srow"><div class="nm">'+r[0]+'<small>'+r[1]+'</small></div><div class="bar"><i style="width:'+(r[2]/25*100)+'%"></i></div><div class="pt">'+r[2]+'</div></div>'+
+    '<details class="crit"><summary>상·하 기준 보기</summary><p style="margin-top:6px"><b style="color:var(--ok)">상(90% 이상)</b> '+r[3]+'</p><p><b style="color:var(--bad)">하(60% 미만)</b> '+r[4]+'</p></details></div>'; }).join('');
+  $('forms').innerHTML=['apply','report','ai'].map(function(k,i){
+    var f=p.forms[k];
+    return '<div class="form-card"><span class="tag">FORM 0'+(i+1)+'</span><h3>'+KIND[k]+'</h3><ul>'+FORM_INFO[k].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'+
+      (f?'<div class="fn">'+esc(f.name)+'</div><div><a class="btn sm primary" href="'+esc(f.url)+'" target="_blank" rel="noopener">양식 열기</a></div>':'<div class="muted" style="font-size:13px">선생님이 아직 양식을 올리지 않았습니다.</div>')+'</div>';
+  }).join('');
+  $('contact').textContent=s.contact?'문의 · '+s.contact:'';
+  $('tabCount').textContent=p.teams.length||'';
+  renderTeams(); renderVotes();
+}
+
+function renderTeams(){
+  var q=$('search').value.trim().toLowerCase(), all=S.pub.teams;
+  var list=all.filter(function(t){ return !q||(t.teamName+' '+t.project+' '+t.field+' '+t.devType).toLowerCase().indexOf(q)>=0; });
+  $('teamCount').textContent=all.length+' TEAMS';
+  if(!all.length){ $('teams').innerHTML='<div class="empty" style="grid-column:1/-1">아직 등록한 팀이 없습니다. ‘팀 등록하기’로 첫 팀이 되어 보세요.</div>'; return; }
+  if(!list.length){ $('teams').innerHTML='<div class="empty" style="grid-column:1/-1">검색과 맞는 팀이 없습니다.</div>'; return; }
+  $('teams').innerHTML=list.map(function(t){
+    return '<button class="team" type="button" data-id="'+esc(t.id)+'"><span class="id">#'+esc(t.id)+'</span><span class="tn">'+esc(t.teamName)+'</span>'+
+      '<span class="meta">'+esc(t.field||'분야 미정')+' · '+esc(t.devType||'-')+' · '+t.memberCount+'명</span>'+
+      '<span class="badges"><span class="badge '+(t.hasApp?'ok':'')+'">신청서 '+(t.hasApp?'✓':'–')+'</span><span class="badge '+(t.hasRep?'ok':'')+'">보고서 '+(t.hasRep?'✓':'–')+'</span><span class="badge '+(t.hasAi?'ok':'')+'">AI기록 '+(t.hasAi?'✓':'–')+'</span></span></button>';
+  }).join('');
+}
+
+/* ───────── 팀 평가 ───────── */
+function renderVotes(){
+  var s=S.pub.settings, single=s.voteMode==='single';
+  $('voteRule').textContent=single?'한 사람이 한 팀에만 투표할 수 있습니다.':'등록된 팀마다 한 번씩만 투표할 수 있습니다.';
+  var v=S.voter;
+  $('vt_btn').textContent=v?'다른 학번으로':'투표 시작';
+  $('vt_id').disabled=!!v; $('vt_name').disabled=!!v;
+  var teams=S.pub.teams.slice();
+  var show=s.showVotes && teams.some(function(t){return t.votes!=null;});
+  if(show) teams.sort(function(a,b){ return (b.votes||0)-(a.votes||0)||a.teamName.localeCompare(b.teamName,'ko'); });
+  var max=Math.max.apply(null,[1].concat(teams.map(function(t){return t.votes||0;})));
+  $('voteHead').innerHTML=(show?'투표 현황':'참가 팀')+' <span class="tag">'+(s.voteOpen?'LIVE':'CLOSED')+'</span>';
+  if(!teams.length){ $('voteList').innerHTML='<div class="empty">등록한 팀이 생기면 여기에서 투표할 수 있습니다.</div>'; return; }
+  var usedSingle=single && S.myVotes.length>0;
+  $('voteList').innerHTML=teams.map(function(t,i){
+    var voted=S.myVotes.indexOf(t.id)>=0, mine=v && (S.ownTeams||[]).indexOf(t.id)>=0;
+    var btn;
+    if(!s.voteOpen) btn='<button class="btn sm" type="button" disabled>투표 대기</button>';
+    else if(!v) btn='<button class="btn sm" type="button" data-need="1">투표</button>';
+    else if(voted) btn='<button class="btn sm" type="button" disabled>✓ 투표 완료</button>';
+    else if(mine) btn='<button class="btn sm" type="button" disabled>우리 팀</button>';
+    else if(usedSingle) btn='<button class="btn sm" type="button" disabled>투표 마감</button>';
+    else btn='<button class="btn sm hot" type="button" data-vote="'+esc(t.id)+'">투표</button>';
+    return '<div class="vrow'+(voted?' voted':'')+(mine?' mine':'')+'"><span class="rk">'+(show?(i+1):'·')+'</span><div style="min-width:0"><div class="tn">'+esc(t.teamName)+'</div><div class="meta">'+esc(t.field)+' · '+esc(t.project||'')+'</div></div>'+
+      (show?'<div class="vbar"><div class="bar"><i style="width:'+((t.votes||0)/max*100)+'%"></i></div><span class="pt">'+(t.votes||0)+'</span></div>':'<div></div>')+btn+'</div>';
+  }).join('');
+}
+
+$('voterForm').addEventListener('submit',function(e){
+  e.preventDefault(); $('vt_err').textContent='';
+  if(S.voter){ S.voter=null; S.myVotes=[]; S.ownTeams=[]; store('swc_voter',null); $('vt_id').value=''; $('vt_name').value=''; renderVotes(); $('vt_id').focus(); return; }
+  var id=$('vt_id').value.trim(), name=$('vt_name').value.trim();
+  busy($('v-vote'),true);
+  api('myVotes',id,name).then(function(list){ S.voter={id:id,name:name}; S.myVotes=list; S.ownTeams=[]; store('swc_voter',JSON.stringify(S.voter)); renderVotes(); })
+    .catch(function(e2){ $('vt_err').textContent=e2.message; }).then(function(){ busy($('v-vote'),false); });
+});
+
+$('voteList').addEventListener('click',function(e){
+  var need=e.target.closest('[data-need]'); if(need){ $('vt_err').textContent='학번과 이름을 넣고 ‘투표 시작’을 먼저 눌러 주세요.'; $('vt_id').focus(); return; }
+  var b=e.target.closest('[data-vote]'); if(!b) return;
+  if(!armed(b,'한 번 더 누르면 투표')) return;
+  var tid=b.dataset.vote; busy($('v-vote'),true);
+  api('vote',S.voter.id,S.voter.name,tid).then(function(p){ S.pub=p; S.myVotes=p.myVotes||S.myVotes.concat([tid]); renderAll(); toast('투표했습니다.'); })
+    .catch(function(e2){ if(/우리 팀/.test(e2.message)){ S.ownTeams=(S.ownTeams||[]).concat([tid]); renderVotes(); } toast(e2.message); $('vt_err').textContent=e2.message; })
+    .then(function(){ busy($('v-vote'),false); });
+});
+
+/* ───────── 시트 ───────── */
+var dlg=$('dlg'), sheet=$('sheet');
+function openSheet(html,wide){ sheet.className='sheet'+(wide?' wide':''); sheet.innerHTML=html; if(!dlg.open) dlg.showModal(); sheet.scrollTop=0; }
+function closeSheet(){ if(dlg.open) dlg.close(); }
+dlg.addEventListener('click',function(e){ if(e.target===dlg) closeSheet(); });
+function head(tag,title){ return '<div class="sheet-head"><div><span class="tag">'+tag+'</span><h2>'+esc(title)+'</h2></div><button class="x" type="button" data-act="close" aria-label="닫기">×</button></div>'; }
+
+function teamFields(p,t){
+  t=t||{};
+  return '<div class="field"><label for="'+p+'name">팀명</label><input type="text" id="'+p+'name" maxlength="20" value="'+esc(t.teamName)+'" required><span class="hint">목록과 투표 화면에 이 이름으로 보입니다.</span></div>'+
+    '<div class="row2"><div class="field"><label for="'+p+'field">참가 분야</label><select id="'+p+'field">'+opts(FIELDS,t.field)+'</select></div>'+
+    '<div class="field"><label for="'+p+'dev">개발 형태</label><select id="'+p+'dev">'+opts(DEVTYPES,t.devType)+'</select></div></div>'+
+    '<div class="field"><label for="'+p+'proj">프로젝트 가제</label><input type="text" id="'+p+'proj" maxlength="60" value="'+esc(t.project)+'"></div>'+
+    '<div class="field"><label for="'+p+'leader">대표 학생 (학번 이름)</label><input type="text" id="'+p+'leader" maxlength="30" placeholder="10101 홍길동" value="'+esc(t.leader)+'" required></div>'+
+    '<div class="field"><label for="'+p+'members">팀원 (학번 이름, 쉼표로 구분, 최대 2명)</label><input type="text" id="'+p+'members" maxlength="80" placeholder="10102 김철수, 20103 이영희" value="'+esc(t.members)+'"><span class="hint">개인 참가면 비워 두세요. 학번이 적힌 학생은 이 팀에 투표할 수 없습니다.</span></div>';
+}
+function collect(p){ return {teamName:$(p+'name').value.trim(),field:$(p+'field').value,devType:$(p+'dev').value,project:$(p+'proj').value.trim(),leader:$(p+'leader').value.trim(),members:$(p+'members').value.trim(),
+  sourceUrl:$(p+'src')?$(p+'src').value.trim():'',videoUrl:$(p+'vid')?$(p+'vid').value.trim():''}; }
+
+function openRegister(){
+  if(!S.pub) return;
+  openSheet(head('NEW TEAM','팀 등록')+
+  '<form class="box" id="regForm" autocomplete="off">'+teamFields('r_')+
+    '<div class="field"><label for="r_file">참가 신청서 파일</label><input type="file" id="r_file" accept=".hwp,.hwpx,.pdf,.doc,.docx"><span class="hint">지금 올리지 않아도 등록 후 팀 화면에서 올릴 수 있습니다.</span></div>'+
+    '<div class="row2"><div class="field"><label for="r_pw">팀 비밀번호</label><input type="password" id="r_pw" minlength="4" required autocomplete="new-password"></div>'+
+    '<div class="field"><label for="r_pw2">비밀번호 확인</label><input type="password" id="r_pw2" minlength="4" required autocomplete="new-password"></div></div>'+
+    '<span class="hint" style="font-size:12px;color:var(--muted)">이 비밀번호를 아는 사람만 우리 팀 자료를 고치거나 지울 수 있습니다. 팀원끼리만 공유하세요.</span>'+
+    '<div class="err" id="r_err"></div><div class="actions"><button class="btn primary" type="submit">등록하기</button><button class="btn" type="button" data-act="close">취소</button></div></form>');
+  $('regForm').addEventListener('submit',function(e){
+    e.preventDefault(); var err=$('r_err'); err.textContent='';
+    if($('r_pw').value!==$('r_pw2').value){ err.textContent='비밀번호 두 칸이 서로 다릅니다.'; return; }
+    var info=collect('r_'); info.password=$('r_pw').value; busy(sheet,true);
+    readFile($('r_file')).then(function(f){ return api('registerTeam',info,f); })
+      .then(function(t){ S.keys[t.id]={pw:info.password,detail:t}; toast('‘'+t.teamName+'’ 팀을 등록했습니다.'); return load().then(function(){ setTab('teams'); renderTeam(t.id); }); })
+      .catch(function(e2){ err.textContent=e2.message; }).then(function(){ busy(sheet,false); });
+  });
+}
+
+function fileBox(k,f,open){
+  var h='<div class="filebox"><div class="top"><strong>'+KIND[k]+'</strong>'+(f?'<span class="badges"><span class="badge ok">제출 '+fmt(f.at)+'</span>'+(isLate(f.at)?'<span class="badge late">마감 후</span>':'')+'</span>':'<span class="badge">미제출</span>')+'</div>';
+  if(f) h+='<div class="name">'+esc(f.name)+'</div>';
+  if(!open) h+='<div class="muted" style="font-size:13px">작품 제출 기간이 아닙니다.</div>';
+  h+='<div class="actions">';
+  if(f) h+='<a class="btn sm" href="'+esc(f.url)+'" target="_blank" rel="noopener">열기</a>';
+  if(open) h+='<label class="btn sm primary" for="up_'+k+'">'+(f?'다른 파일로 바꾸기':'파일 올리기')+'</label><input type="file" id="up_'+k+'" accept=".hwp,.hwpx,.pdf,.doc,.docx,.ppt,.pptx,.zip" hidden>';
+  if(f) h+='<button class="btn sm danger" type="button" data-act="rmfile" data-kind="'+k+'">지우기</button>';
+  return h+'</div></div>';
+}
+function linkOut(u){ return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u)+'</a>':'<span class="muted">없음</span>'; }
+
+function renderTeam(id){
+  var pubT=S.pub.teams.filter(function(t){return t.id===id;})[0], key=S.keys[id];
+  if(!pubT&&!key){ closeSheet(); return; }
+  var t=key?key.detail:pubT, s=S.pub.settings;
+  var h=head('TEAM #'+esc(t.id),t.teamName);
+  h+='<div class="box"><dl class="kv"><dt>분야</dt><dd>'+esc(t.field||'-')+'</dd><dt>개발 형태</dt><dd>'+esc(t.devType||'-')+'</dd><dt>프로젝트</dt><dd>'+esc(t.project||'-')+'</dd><dt>인원</dt><dd>'+t.memberCount+'명</dd>'+
+    (key?'<dt>대표</dt><dd>'+esc(t.leader)+'</dd><dt>팀원</dt><dd>'+esc(t.members||'없음 (개인 참가)')+'</dd><dt>소스코드</dt><dd>'+linkOut(t.sourceUrl)+'</dd><dt>시연 영상</dt><dd>'+linkOut(t.videoUrl)+'</dd>':'')+
+    '<dt>최근 수정</dt><dd class="mono">'+fmt(t.updatedAt)+'</dd></dl>'+
+    '<div class="badges"><span class="badge '+(t.hasApp?'ok':'')+'">참가 신청서 '+(t.hasApp?'✓':'–')+'</span><span class="badge '+(t.hasRep?'ok':'')+'">결과보고서 '+(t.hasRep?'✓':'–')+'</span><span class="badge '+(t.hasAi?'ok':'')+'">AI 활용 기록지 '+(t.hasAi?'✓':'–')+'</span></div></div>';
+  if(!key){
+    h+='<form class="box" id="unlockForm"><h3>우리 팀 자료 관리</h3><div class="field"><label for="u_pw">팀 비밀번호</label><input type="password" id="u_pw" required autocomplete="current-password"></div>'+
+      '<div class="err" id="u_err"></div><div class="actions"><button class="btn primary" type="submit">열기</button></div><span class="muted" style="font-size:12px">비밀번호를 잊었다면 담당 선생님께 초기화를 요청하세요.</span></form>';
+    openSheet(h); sheet.dataset.team=id;
+    $('unlockForm').addEventListener('submit',function(e){ e.preventDefault(); var pw=$('u_pw').value; busy(sheet,true);
+      api('unlockTeam',id,pw).then(function(d){ S.keys[id]={pw:pw,detail:d}; renderTeam(id); }).catch(function(e2){ $('u_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
+    return;
+  }
+  h+='<div class="box"><h3>제출 파일 <span class="muted" style="font-weight:400;font-size:12px">마감 11. 15.(일) 23:59</span></h3>'+fileBox('apply',t.apply,s.submitOpen)+fileBox('report',t.report,s.submitOpen)+fileBox('ai',t.ai,s.submitOpen)+'<div class="err" id="f_err"></div></div>';
+  h+='<form class="box" id="editForm" autocomplete="off"><h3>팀 정보 · 링크</h3>'+teamFields('e_',t)+
+    '<div class="field"><label for="e_src">소스코드 위치 (GitHub 주소)</label><input type="url" id="e_src" maxlength="300" placeholder="https://github.com/..." value="'+esc(t.sourceUrl)+'"></div>'+
+    '<div class="field"><label for="e_vid">시연 영상 링크 (3분 이내)</label><input type="url" id="e_vid" maxlength="300" placeholder="https://..." value="'+esc(t.videoUrl)+'"></div>'+
+    '<div class="field"><label for="e_pw">새 비밀번호</label><input type="password" id="e_pw" autocomplete="new-password"><span class="hint">바꿀 때만 입력하세요.</span></div>'+
+    '<div class="err" id="e_err"></div><div class="actions"><button class="btn primary" type="submit">저장</button></div></form>';
+  h+='<div class="box"><h3>팀 삭제</h3><span class="muted" style="font-size:13px">팀, 올린 파일, 받은 투표가 모두 지워집니다. 되돌릴 수 없습니다.</span>'+
+    '<div class="actions"><button class="btn danger" type="button" data-act="delteam">팀 삭제</button><button class="btn" type="button" data-act="lock">잠그기</button></div><div class="err" id="d_err"></div></div>';
+  openSheet(h); sheet.dataset.team=id;
+  ['apply','report','ai'].forEach(function(k){ var inp=$('up_'+k); if(!inp) return;
+    inp.addEventListener('change',function(){ $('f_err').textContent=''; busy(sheet,true);
+      readFile(inp).then(function(f){ return f&&api('uploadTeamFile',id,key.pw,k,f); })
+        .then(function(d){ if(!d) return; key.detail=d; toast(KIND[k]+'를 올렸습니다.'); return load().then(function(){ renderTeam(id); }); })
+        .catch(function(e){ $('f_err').textContent=e.message; }).then(function(){ busy(sheet,false); }); }); });
+  $('editForm').addEventListener('submit',function(e){ e.preventDefault(); busy(sheet,true);
+    var info=collect('e_'), np=$('e_pw').value; info.newPassword=np;
+    api('updateTeam',id,key.pw,info).then(function(d){ if(np) key.pw=np; key.detail=d; toast('팀 정보를 저장했습니다.'); return load().then(function(){ renderTeam(id); }); })
+      .catch(function(e2){ $('e_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
+}
+
+sheet.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]'); if(!b) return;
+  var act=b.dataset.act, id=sheet.dataset.team, key=id&&S.keys[id];
+  if(act==='close') return closeSheet();
+  if(act==='lock'){ delete S.keys[id]; renderTeam(id); return; }
+  if(act==='rmfile'){ if(!armed(b,'한 번 더 누르면 지움')) return; var k=b.dataset.kind; busy(sheet,true);
+    api('removeTeamFile',id,key.pw,k).then(function(d){ key.detail=d; toast(KIND[k]+'를 지웠습니다.'); return load().then(function(){ renderTeam(id); }); })
+      .catch(function(e2){ $('f_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); return; }
+  if(act==='delteam'){ if(!armed(b)) return; busy(sheet,true);
+    api('deleteTeam',id,key.pw).then(function(){ delete S.keys[id]; closeSheet(); toast('팀을 삭제했습니다.'); return load(); })
+      .catch(function(e2){ $('d_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); return; }
+  if(act.indexOf('adm-')===0) adminAction(b);
+});
+
+/* ───────── 관리자 ───────── */
+function openAdmin(){
+  if(!S.pub) return;
+  if(S.admin) return renderAdmin();
+  openSheet(head('ADMIN','관리자')+'<form class="box" id="admForm"><div class="field"><label for="a_pw">관리자 비밀번호</label><input type="password" id="a_pw" required autocomplete="current-password"></div><div class="err" id="a_err"></div><div class="actions"><button class="btn primary" type="submit">들어가기</button></div></form>');
+  sheet.dataset.team='';
+  $('admForm').addEventListener('submit',function(e){ e.preventDefault(); var pw=$('a_pw').value; busy(sheet,true);
+    api('adminLogin',pw).then(function(d){ S.admin={pw:pw,data:d}; renderAdmin(); }).catch(function(e2){ $('a_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
+}
+function refreshAdmin(){ return api('adminLogin',S.admin.pw).then(function(d){ S.admin.data=d; return load(); }).then(renderAdmin); }
+
+function renderAdmin(){
+  var d=S.admin.data, s=S.pub.settings, f=S.pub.forms;
+  var n=function(k){ return d.teams.filter(function(t){return t[k];}).length; };
+  var h=head('ADMIN','관리자');
+  h+='<div class="stats"><div class="stat"><b>'+d.teams.length+'</b><span>등록 팀</span></div><div class="stat"><b>'+n('apply')+'</b><span>참가 신청서</span></div><div class="stat"><b>'+n('report')+'</b><span>결과보고서</span></div><div class="stat"><b>'+n('ai')+'</b><span>AI 활용 기록지</span></div><div class="stat"><b>'+d.voterCount+'</b><span>투표 참여자</span></div></div>';
+  h+='<div class="actions"><a class="btn sm" href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">참가팀·투표 시트</a><a class="btn sm" href="'+esc(d.folderUrl)+'" target="_blank" rel="noopener">제출 폴더</a><button class="btn sm" type="button" data-act="adm-refresh">새로고침</button><button class="btn sm" type="button" data-act="adm-logout">로그아웃</button></div>';
+  h+='<form class="box" id="setForm"><h3>접수·투표 설정</h3><div class="toggles">'+
+    '<label><input type="checkbox" id="s_reg"'+(s.registerOpen?' checked':'')+'> 팀 등록 받기</label>'+
+    '<label><input type="checkbox" id="s_sub"'+(s.submitOpen?' checked':'')+'> 작품 제출 받기</label>'+
+    '<label><input type="checkbox" id="s_vote"'+(s.voteOpen?' checked':'')+'> 팀 평가 투표 열기</label>'+
+    '<label><input type="checkbox" id="s_show"'+(s.showVotes?' checked':'')+'> 득표수 공개</label></div>'+
+    '<div class="row2"><div class="field"><label for="s_mode">투표 방식</label><select id="s_mode"><option value="perTeam"'+(s.voteMode!=='single'?' selected':'')+'>팀마다 한 번씩</option><option value="single"'+(s.voteMode==='single'?' selected':'')+'>1인 1팀 (운영계획 기준)</option></select></div>'+
+    '<div class="field"><label for="s_dl">제출 마감 (이후 제출은 ‘마감 후’ 표시)</label><input type="datetime-local" id="s_dl" value="'+esc(s.deadline)+'"></div></div>'+
+    '<div class="field"><label for="s_notice">안내문</label><textarea id="s_notice">'+esc(s.notice)+'</textarea></div>'+
+    '<div class="field"><label for="s_sched">일정 (한 줄에 하나, 날짜 | 내용)</label><textarea id="s_sched" rows="4">'+esc((s.schedule||[]).map(function(x){return x.date+' | '+x.label;}).join('\n'))+'</textarea></div>'+
+    '<div class="field"><label for="s_contact">문의처</label><input type="text" id="s_contact" value="'+esc(s.contact)+'"></div>'+
+    '<div class="err" id="s_err"></div><div class="actions"><button class="btn primary" type="submit">저장</button></div></form>';
+  h+='<div class="box"><h3>양식 올리기</h3>'+['apply','report','ai'].map(function(k){
+    return '<div class="filebox"><div class="top"><strong>'+KIND[k]+'</strong>'+(f[k]?'<span class="badge ok">게시 중</span>':'<span class="badge">없음</span>')+'</div>'+(f[k]?'<div class="name">'+esc(f[k].name)+'</div>':'')+
+      '<div class="actions"><label class="btn sm primary" for="fm_'+k+'">'+(f[k]?'바꾸기':'올리기')+'</label><input type="file" id="fm_'+k+'" hidden>'+
+      (f[k]?'<a class="btn sm" href="'+esc(f[k].url)+'" target="_blank" rel="noopener">열기</a><button class="btn sm danger" type="button" data-act="adm-rmform" data-kind="'+k+'">내리기</button>':'')+'</div></div>'; }).join('')+'<div class="err" id="fm_err"></div></div>';
+  var fl=function(x){ return x?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.name)+'</a><div class="mono muted">'+fmt(x.at)+(isLate(x.at)?' <span class="badge late">마감 후</span>':'')+'</div>':'<span class="muted">미제출</span>'; };
+  h+='<div class="box"><h3>참가 팀 ('+d.teams.length+')</h3><div class="tbl-wrap admin-tbl"><table><thead><tr><th>팀명</th><th>대표 / 팀원</th><th>분야 · 형태 · 프로젝트</th><th>신청서</th><th>결과보고서</th><th>AI 기록지</th><th>링크</th><th>득표</th><th>관리</th></tr></thead><tbody>'+
+    (d.teams.length?d.teams.map(function(t){
+      return '<tr><td><strong>'+esc(t.teamName)+'</strong><div class="mono muted">#'+esc(t.id)+'</div></td><td>'+esc(t.leader)+'<div class="muted">'+esc(t.members)+'</div></td><td>'+esc(t.field)+' · '+esc(t.devType)+'<div class="muted">'+esc(t.project)+'</div></td>'+
+        '<td>'+fl(t.apply)+'</td><td>'+fl(t.report)+'</td><td>'+fl(t.ai)+'</td><td>'+(t.sourceUrl?'<a href="'+esc(t.sourceUrl)+'" target="_blank" rel="noopener">코드</a><br>':'')+(t.videoUrl?'<a href="'+esc(t.videoUrl)+'" target="_blank" rel="noopener">영상</a>':'')+'</td>'+
+        '<td class="mono">'+(t.votes||0)+'</td><td><div class="actions" style="flex-direction:column;align-items:flex-start"><button class="btn sm" type="button" data-act="adm-reset" data-id="'+esc(t.id)+'">비번 초기화</button><button class="btn sm danger" type="button" data-act="adm-del" data-id="'+esc(t.id)+'">삭제</button></div></td></tr>';
+    }).join(''):'<tr><td colspan="9" class="muted">아직 등록한 팀이 없습니다.</td></tr>')+'</tbody></table></div><div class="err" id="t_err"></div>'+
+    '<div class="actions"><button class="btn sm danger" type="button" data-act="adm-resetvotes">투표 기록 모두 지우기</button></div></div>';
+  openSheet(h,true); sheet.dataset.team='';
+  ['apply','report','ai'].forEach(function(k){ $('fm_'+k).addEventListener('change',function(){ var inp=this; busy(sheet,true);
+    readFile(inp).then(function(file){ return file&&api('adminUploadForm',S.admin.pw,k,file); })
+      .then(function(p){ if(!p) return; S.pub=p; renderAll(); toast(KIND[k]+' 양식을 게시했습니다.'); renderAdmin(); })
+      .catch(function(e){ $('fm_err').textContent=e.message; }).then(function(){ busy(sheet,false); }); }); });
+  $('setForm').addEventListener('submit',function(e){ e.preventDefault();
+    var sch=$('s_sched').value.split('\n').map(function(l){ var p=l.split('|'); return {date:(p[0]||'').trim(),label:p.slice(1).join('|').trim()}; }).filter(function(x){return x.date||x.label;});
+    var ns={notice:$('s_notice').value.trim(),schedule:sch,deadline:$('s_dl').value,contact:$('s_contact').value.trim(),registerOpen:$('s_reg').checked,submitOpen:$('s_sub').checked,voteOpen:$('s_vote').checked,voteMode:$('s_mode').value,showVotes:$('s_show').checked};
+    busy(sheet,true);
+    api('adminSaveSettings',S.admin.pw,ns).then(function(p){ S.pub=p; renderAll(); toast('설정을 저장했습니다.'); return refreshAdmin(); })
+      .catch(function(e2){ $('s_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
+}
+
+function adminAction(b){
+  var act=b.dataset.act, pw=S.admin.pw;
+  var done=function(){ busy(sheet,false); };
+  if(act==='adm-logout'){ S.admin=null; closeSheet(); return; }
+  if(act==='adm-refresh'){ busy(sheet,true); refreshAdmin().catch(function(e){ toast(e.message); }).then(done); return; }
+  if(act==='adm-rmform'){ if(!armed(b,'한 번 더 누르면 내림')) return; busy(sheet,true);
+    api('adminRemoveForm',pw,b.dataset.kind).then(function(p){ S.pub=p; renderAll(); renderAdmin(); }).catch(function(e){ $('fm_err').textContent=e.message; }).then(done); return; }
+  if(act==='adm-reset'){ var np=String(Math.floor(1000+Math.random()*9000)); if(!armed(b,'새 비번 '+np+'로?')) return; busy(sheet,true);
+    api('adminResetPassword',pw,b.dataset.id,np).then(function(){ var t=$('t_err'); t.className='err ok'; t.textContent='새 비밀번호 '+np+' · 해당 팀에 알려 주세요.'; }).catch(function(e){ $('t_err').textContent=e.message; }).then(done); return; }
+  if(act==='adm-del'){ if(!armed(b)) return; busy(sheet,true);
+    api('adminDeleteTeam',pw,b.dataset.id).then(function(){ delete S.keys[b.dataset.id]; toast('팀을 삭제했습니다.'); return refreshAdmin(); }).catch(function(e){ $('t_err').textContent=e.message; }).then(done); return; }
+  if(act==='adm-resetvotes'){ if(!armed(b,'한 번 더 누르면 모든 투표 삭제')) return; busy(sheet,true);
+    api('adminResetVotes',pw).then(function(){ S.myVotes=[]; toast('투표 기록을 지웠습니다.'); return refreshAdmin(); }).catch(function(e){ $('t_err').textContent=e.message; }).then(done); }
+}
+
+/* ───────── 시작 ───────── */
+$('teams').addEventListener('click',function(e){ var b=e.target.closest('.team'); if(b) renderTeam(b.dataset.id); });
+$('search').addEventListener('input',function(){ if(S.pub) renderTeams(); });
+$('btnAdmin').addEventListener('click',openAdmin);
+$('demoBar').hidden=LIVE;
+(function(){ ['ck1','ck2','ck3','ck4','ck5','ck6'].forEach(function(id){ var el=$(id); el.checked=store('swc_'+id)==='1'; el.addEventListener('change',function(){ store('swc_'+id,el.checked?'1':'0'); }); }); })();
+load().then(function(){
+  var saved=store('swc_voter'); if(!saved) return;
+  try{ var v=JSON.parse(saved); $('vt_id').value=v.id; $('vt_name').value=v.name;
+    return api('myVotes',v.id,v.name).then(function(list){ S.voter=v; S.myVotes=list; renderVotes(); }); }catch(e){}
+}).catch(function(){});
+})();
+</script>
