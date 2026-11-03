@@ -1,5 +1,12 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>전곽 SW 경시대회 2026</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<!-- ▼ GitHub 등 외부에 올릴 때: content="" 안에 Apps Script 웹 앱 주소(…/exec)를 붙여 넣으세요. Apps Script 안에서는 비워 둬도 됩니다. -->
+<meta name="sw-api-url" content="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800&display=swap">
@@ -37,6 +44,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .demo{background:var(--warn-soft);color:var(--warn);font-size:13px;border-bottom:1px solid rgba(255,200,90,.3)}
 .demo .wrap{padding-block:7px}
+.conn{background:var(--bad-soft);color:var(--ink);font-size:14px;border-bottom:1px solid var(--bad)}
+.conn .wrap{padding-block:10px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.conn b{color:var(--bad)}
 
 /* 상단 바 + 탭 */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -269,10 +279,14 @@ footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:fl
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+</head>
+<body>
+
 
 <canvas id="bgfx" aria-hidden="true"></canvas>
 <div class="app">
-<div class="demo" id="demoBar" hidden><div class="wrap">미리보기 모드 · 화면의 팀은 예시이며 저장되지 않습니다. 예시 팀 비밀번호 1234 · 관리자 비밀번호 admin</div></div>
+<div class="demo" id="demoBar" hidden><div class="wrap">미리보기 모드 · 서버 주소가 비어 있어 화면의 팀은 예시이며 저장되지 않습니다. 예시 팀 비밀번호 1234 · 관리자 비밀번호 admin</div></div>
+<div class="conn" id="connBar" hidden><div class="wrap"><b>구글 서버에 연결하지 못했습니다.</b> <span id="connMsg"></span> <button class="btn sm" type="button" id="connRetry">다시 시도</button></div></div>
 
 <header class="topbar"><div class="wrap">
   <div class="brand"><span class="sig">JSHS</span><b>2026 전곽 SW 경시대회</b></div>
@@ -513,16 +527,22 @@ footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:fl
 })();
 
 /* ───────── 서버 호출 / 미리보기 ───────── */
-/* GitHub Pages 등 외부 주소에 올릴 때: 아래 따옴표 안에 Apps Script 웹 앱 URL(…/exec)을 넣으세요. */
-var API_URL = '';
+/* 서버 주소: <head>의 <meta name="sw-api-url" content="…/exec"> 에서 읽음 */
+var API_URL = ((document.querySelector('meta[name="sw-api-url"]')||{}).content||'').replace(/[\s'"“”‘’]/g,'');
 var GAS = !!(window.google && google.script && google.script.run);
 var REMOTE = !GAS && /^https:\/\/script\.google(usercontent)?\.com\//.test(API_URL);
 var LIVE = GAS || REMOTE;
+var URL_HINT = '';
+if(!GAS && API_URL && !REMOTE) URL_HINT = '서버 주소가 https://script.google.com/macros/s/…/exec 형식이 아닙니다. index.html 위쪽 sw-api-url 칸을 확인하세요.';
+else if(REMOTE && /\/dev(\?|$)/.test(API_URL)) URL_HINT = '주소가 /dev 로 끝나는 테스트 주소입니다. 배포 → 배포 관리에 나오는 /exec 로 끝나는 웹 앱 URL을 넣어 주세요.';
 function api(fn){
   var args=Array.prototype.slice.call(arguments,1);
+  if(URL_HINT && !GAS) return Promise.reject(new Error(URL_HINT));
   if(REMOTE) return fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args})})
-    .then(function(r){ if(!r.ok) throw new Error('서버에 연결하지 못했습니다. ('+r.status+')'); return r.json(); })
-    .then(function(j){ if(!j.ok) throw new Error(j.error||'요청을 처리하지 못했습니다.'); return j.data; });
+    .catch(function(){ throw new Error('서버에 닿지 못했습니다. 웹 앱 배포의 액세스 권한이 ‘모든 사용자’인지, 주소가 /exec 로 끝나는지 확인하세요.'); })
+    .then(function(r){ if(!r.ok) throw new Error('서버가 응답하지 않습니다. ('+r.status+')'); return r.text(); })
+    .then(function(t){ var j; try{ j=JSON.parse(t); }catch(e){ throw new Error('서버가 예전 버전이거나 접근이 막혀 있습니다. Code.gs를 최신 파일로 바꾼 뒤 배포 → 배포 관리 → 수정 → 새 버전, 액세스 권한 ‘모든 사용자’로 다시 배포하세요.'); }
+      if(!j.ok) throw new Error(j.error||'요청을 처리하지 못했습니다.'); return j.data; });
   if(GAS) return new Promise(function(res,rej){ var r=google.script.run.withSuccessHandler(res).withFailureHandler(function(e){ rej(new Error((e&&e.message)||String(e))); }); r[fn].apply(r,args); });
   return new Promise(function(res,rej){ setTimeout(function(){ try{ res(JSON.parse(JSON.stringify(DEMO[fn].apply(null,args)))); }catch(e){ rej(e); } },200); });
 }
@@ -627,7 +647,16 @@ document.querySelector('.tabs').addEventListener('click',function(e){ var b=e.ta
 document.addEventListener('click',function(e){ var g=e.target.closest('[data-go]'); if(!g) return; var to=g.dataset.go; if(to==='register') openRegister(); else setTab(to); });
 
 /* ───────── 공개 화면 ───────── */
-function load(){ return api('getPublic').then(function(p){ S.pub=p; renderAll(); }).catch(function(e){ $('notice').textContent='정보를 불러오지 못했습니다. 새로고침해 주세요. ('+e.message+')'; }); }
+function load(){ return api('getPublic').then(function(p){ S.pub=p; $('connBar').hidden=true; renderAll(); })
+  .catch(function(e){ $('connMsg').textContent=e.message; $('connBar').hidden=false; if(!S.pub){ $('notice').textContent='대회 정보를 불러오지 못했습니다. 화면 맨 위 안내를 확인해 주세요.'; renderOffline(); } throw e; }); }
+function renderOffline(){
+  var msg='<div class="empty" style="grid-column:1/-1">서버와 연결되면 여기에 표시됩니다.</div>';
+  ['teams','forms','voteList'].forEach(function(id){ $(id).innerHTML=msg; });
+  $('schedule').innerHTML='<li class="muted">서버와 연결되면 일정이 표시됩니다.</li>';
+  $('score').innerHTML=SCORE.map(function(r){ return '<div class="srow"><div class="nm">'+r[0]+'<small>'+r[1]+'</small></div><div class="bar"><i style="width:'+(r[2]/25*100)+'%"></i></div><div class="pt">'+r[2]+'</div></div>'; }).join('');
+}
+function needServer(){ if(S.pub) return false; toast('서버와 연결되지 않아 사용할 수 없습니다. 화면 맨 위 안내를 확인해 주세요.'); $('connBar').hidden=false; return true; }
+$('connRetry').addEventListener('click',function(){ $('connMsg').textContent='다시 연결하는 중…'; load().catch(function(){}); });
 
 function renderAll(){
   var p=S.pub, s=p.settings;
@@ -694,7 +723,7 @@ function renderVotes(){
 }
 
 $('voterForm').addEventListener('submit',function(e){
-  e.preventDefault(); $('vt_err').textContent='';
+  e.preventDefault(); $('vt_err').textContent=''; if(needServer()) return;
   if(S.voter){ S.voter=null; S.myVotes=[]; S.ownTeams=[]; store('swc_voter',null); $('vt_id').value=''; $('vt_name').value=''; renderVotes(); $('vt_id').focus(); return; }
   var id=$('vt_id').value.trim(), name=$('vt_name').value.trim();
   busy($('v-vote'),true);
@@ -732,7 +761,7 @@ function collect(p){ return {teamName:$(p+'name').value.trim(),field:$(p+'field'
   sourceUrl:$(p+'src')?$(p+'src').value.trim():'',videoUrl:$(p+'vid')?$(p+'vid').value.trim():''}; }
 
 function openRegister(){
-  if(!S.pub) return;
+  if(needServer()) return;
   openSheet(head('NEW TEAM','팀 등록')+
   '<form class="box" id="regForm" autocomplete="off">'+teamFields('r_')+
     '<div class="field"><label for="r_file">참가 신청서 파일</label><input type="file" id="r_file" accept=".hwp,.hwpx,.pdf,.doc,.docx"><span class="hint">지금 올리지 않아도 등록 후 팀 화면에서 올릴 수 있습니다.</span></div>'+
@@ -833,7 +862,7 @@ sheet.addEventListener('click',function(e){
 
 /* ───────── 관리자 ───────── */
 function openAdmin(){
-  if(!S.pub) return;
+  if(needServer()) return;
   if(S.admin) return renderAdmin();
   openSheet(head('ADMIN','관리자')+'<form class="box" id="admForm"><div class="field"><label for="a_pw">관리자 비밀번호</label><input type="password" id="a_pw" required autocomplete="current-password"></div><div class="err" id="a_err"></div><div class="actions"><button class="btn primary" type="submit">들어가기</button></div></form>');
   sheet.dataset.team='';
@@ -916,7 +945,7 @@ function adminAction(b){
 $('teams').addEventListener('click',function(e){ var b=e.target.closest('.team'); if(b) renderTeam(b.dataset.id); });
 $('search').addEventListener('input',function(){ if(S.pub) renderTeams(); });
 $('btnAdmin').addEventListener('click',openAdmin);
-$('demoBar').hidden=LIVE;
+$('demoBar').hidden=LIVE||!!API_URL;
 (function(){ ['ck1','ck2','ck3','ck4','ck5','ck6'].forEach(function(id){ var el=$(id); el.checked=store('swc_'+id)==='1'; el.addEventListener('change',function(){ store('swc_'+id,el.checked?'1':'0'); }); }); })();
 load().then(function(){
   var saved=store('swc_voter'); if(!saved) return;
@@ -925,3 +954,6 @@ load().then(function(){
 }).catch(function(){});
 })();
 </script>
+
+</body>
+</html>
