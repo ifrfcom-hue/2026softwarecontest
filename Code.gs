@@ -57,6 +57,29 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/* GitHub Pages 등 외부에 올린 index.html 이 호출하는 창구 */
+const API = {
+  getPublic: getPublic, registerTeam: registerTeam, unlockTeam: unlockTeam,
+  uploadTeamFile: uploadTeamFile, removeTeamFile: removeTeamFile, updateTeam: updateTeam, deleteTeam: deleteTeam,
+  myVotes: myVotes, vote: vote,
+  adminLogin: adminLogin, adminUploadForm: adminUploadForm, adminRemoveForm: adminRemoveForm,
+  adminSaveSettings: adminSaveSettings, adminResetPassword: adminResetPassword,
+  adminDeleteTeam: adminDeleteTeam, adminResetVotes: adminResetVotes
+};
+
+function doPost(e) {
+  let out;
+  try {
+    const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const fn = Object.prototype.hasOwnProperty.call(API, req.fn) ? API[req.fn] : null;
+    if (!fn) throw new Error('알 수 없는 요청입니다.');
+    out = { ok: true, data: fn.apply(null, Array.isArray(req.args) ? req.args : []) };
+  } catch (err) {
+    out = { ok: false, error: (err && err.message) || String(err) };
+  }
+  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
 function setup() {
   const s = store_();
   Logger.log('시트: ' + s.ss.getUrl());
