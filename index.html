@@ -181,6 +181,8 @@ details.crit summary{cursor:pointer;color:var(--cyan);font-size:13px}
 .steps b{display:block}
 .steps span{font-size:13px;color:var(--muted)}
 .check{display:grid;gap:8px}
+.period{display:grid;gap:8px;border:1px solid var(--line);padding:12px;background:rgba(0,0,0,.2)}
+.period .lb{font-weight:600;font-size:14px;color:var(--cyan)}
 .namerule{margin-top:16px;border:1px dashed rgba(255,79,216,.5);padding:12px 14px;display:grid;gap:6px;font-size:14px}
 .namerule ul{margin:0;padding-left:18px;color:var(--cyan);font-size:13px}
 .check label{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
@@ -220,6 +222,8 @@ details.crit summary{cursor:pointer;color:var(--cyan);font-size:13px}
 /* 시트 */
 dialog{border:0;padding:0;background:transparent;max-width:100vw;max-height:100vh;width:100%;height:100%;margin:0;color:var(--ink)}
 dialog::backdrop{background:rgba(2,4,12,.72);backdrop-filter:blur(2px)}
+.no-dialog dialog{display:none;position:fixed;inset:0;z-index:50;background:rgba(2,4,12,.72)}
+.no-dialog dialog[open]{display:block}
 .sheet{position:absolute;right:0;top:0;bottom:0;width:min(540px,100%);background:var(--bg2);border-left:1px solid var(--line-hi);overflow-y:auto;box-shadow:-20px 0 60px rgba(0,0,0,.5);
   padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 20px;display:grid;gap:16px;align-content:start}
 .sheet.wide{width:min(1000px,100%)}
@@ -321,7 +325,7 @@ footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:fl
     <dl class="spec">
       <div><dt>대상</dt><dd>1, 2학년</dd></div>
       <div><dt>참가 형태</dt><dd>개인 또는 2~3인 1팀<small>학년 혼합 가능</small></dd></div>
-      <div><dt>제출 기간</dt><dd>신청서 제출기한<small>2026. 11. 4.(수) ~ 2026. 11. 11.(수)</small>작품&amp;산출물 제출<small>2026. 11. 15.(일)</small></dd></div>
+      <div><dt>제출 기간</dt><dd>신청서 제출기한<small id="perApply">2026. 11. 4.(수) ~ 2026. 11. 11.(수)</small>작품&amp;산출물 제출<small id="perWork">2026. 11. 15.(일)</small></dd></div>
       <div><dt>작품 발표</dt><dd>11. 17.(화) 19:00~<small>발표 순서는 당일 추첨</small></dd></div>
       <div><dt>장소</dt><dd>코딩실(C.LAB)<small>대기 장소 A.LAB</small></dd></div>
       <div><dt>운영 시간</dt><dd>팀당 15분<small>발표·질의응답·코드 인터뷰</small></dd></div>
@@ -431,10 +435,10 @@ footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:fl
       <ol class="steps">
         <li><div><b>양식 내려받기</b><span>참가 신청서, 결과보고서, AI 활용 기록지를 받습니다.</span></div></li>
         <li><div><b>파일 이름에 팀명 쓰기 (필수)</b><span>올리기 전에 파일 이름을 <b class="mono" style="color:var(--cyan);display:inline">팀명-참가신청서</b>, <b class="mono" style="color:var(--cyan);display:inline">팀명-결과보고서</b>, <b class="mono" style="color:var(--cyan);display:inline">팀명-AI활용기록지</b>로 바꿉니다. 팀명이 없는 파일은 올라가지 않습니다.</span></div></li>
-        <li><div><b>팀 등록 + 참가 신청서 (~11. 11.(수))</b><span>팀명과 팀 비밀번호를 정하고 신청서를 올립니다.</span></div></li>
+        <li><div><b>팀 등록 + 참가 신청서 (<span id="stepApply">~11. 11.(수)</span>)</b><span>팀명과 팀 비밀번호를 정하고 신청서를 올립니다.</span></div></li>
         <li><div><b>팀명 누르고 비밀번호 입력</b><span>‘참가 팀’ 탭에서 우리 팀을 열면 파일을 올리고, 바꾸고, 지울 수 있습니다.</span></div></li>
         <li><div><b>작품 URL · 결과보고서 · AI 활용 기록지</b><span>작품은 바로 열어 볼 수 있는 URL로 제출합니다. 소스코드(GitHub) 주소와 3분 이내 시연 영상 링크도 함께 적습니다.</span></div></li>
-        <li><div><b>작품&amp;산출물 마감 11. 15.(일) 23:59</b><span>마감 이후 제출물은 심사 때 감점합니다.</span></div></li>
+        <li><div><b>작품&amp;산출물 마감 <span id="stepWork">11. 15.(일) 23:59</span></b><span>마감 이후 제출물은 심사 때 감점합니다.</span></div></li>
       </ol>
       <div class="namerule"><span class="tag m">FILE NAME</span><div>예) 팀명이 <b>세탁레이더</b>라면</div><ul class="mono"><li>세탁레이더-참가신청서.hwpx</li><li>세탁레이더-결과보고서.hwpx</li><li>세탁레이더-AI활용기록지.hwpx</li></ul></div>
       <div class="actions" style="margin-top:16px"><button class="btn primary" type="button" data-go="register">팀 등록하기</button><a class="btn" href="#v-teams" data-go="teams">우리 팀 찾기</a></div>
@@ -491,7 +495,7 @@ footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);display:fl
 
 <footer><div class="wrap">
   <span id="contact"></span>
-  <span class="mono" style="color:var(--dim)">ver 11.03-G</span> <button class="linkbtn" id="btnAdmin" type="button">관리자</button>
+  <span class="mono" style="color:var(--dim)">ver 11.09-A · <span id="syncAt">자동 갱신 30초</span></span> <button class="linkbtn" id="btnAdmin" type="button">관리자</button>
 </div></footer>
 </div>
 
@@ -546,8 +550,22 @@ var LIVE = GAS || REMOTE;
 var URL_HINT = '';
 if(!GAS && API_URL && !REMOTE) URL_HINT = '서버 주소가 https://script.google.com/macros/s/…/exec 형식이 아닙니다. index.html 위쪽 sw-api-url 칸을 확인하세요.';
 else if(REMOTE && /\/dev(\?|$)/.test(API_URL)) URL_HINT = '주소가 /dev 로 끝나는 테스트 주소입니다. 배포 → 배포 관리에 나오는 /exec 로 끝나는 웹 앱 URL을 넣어 주세요.';
+var READS={getPublic:1,myVotes:1,unlockTeam:1,adminLogin:1};
+var BUSY_RE=/접속자가 많아|Lock|timed out|Service invoked too many|Too many|일시적|temporar/i;
 function api(fn){
-  var args=Array.prototype.slice.call(arguments,1);
+  var args=Array.prototype.slice.call(arguments,1), tries=0;
+  function attempt(){
+    return api1(fn,args).catch(function(e){
+      var net=/서버에 닿지 못했습니다|응답하지 않습니다/.test(e.message);
+      /* 읽기는 네트워크 오류에도, 저장은 서버가 처리 전에 거절한 경우(혼잡)에만 다시 시도 */
+      if(tries<3 && (BUSY_RE.test(e.message) || (net && READS[fn]))){ tries++; return new Promise(function(r){ setTimeout(r, 900*tries + Math.random()*900); }).then(attempt); }
+      if(BUSY_RE.test(e.message)) e.message='접속자가 많아 처리하지 못했습니다. 잠시 후 다시 눌러 주세요.';
+      throw e;
+    });
+  }
+  return attempt();
+}
+function api1(fn,args){
   if(URL_HINT && !GAS) return Promise.reject(new Error(URL_HINT));
   if(REMOTE) return fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args})})
     .catch(function(){ throw new Error('서버에 닿지 못했습니다. 웹 앱 배포의 액세스 권한이 ‘모든 사용자’인지, 주소가 /exec 로 끝나는지 확인하세요.'); })
@@ -562,7 +580,8 @@ function api(fn){
 var DEMO=(function(){
   var now=Date.now(), H=3600e3, D=24*H;
   var settings={notice:'학생이 실제 문제를 스스로 발견하고 소프트웨어로 해결한 뒤, 그 효과를 증명하는 전 과정을 평가하는 문제해결 역량 중심 프로젝트 경시대회입니다.',
-    schedule:[{date:'11. 4.(수) ~ 11. 11.(수)',label:'참가 신청서 제출'},{date:'11. 15.(일)',label:'작품&산출물 제출 마감'},{date:'11. 16.(월)',label:'서류 검토 · 발표 순서 안내'},{date:'11. 17.(화) 19:00 ~',label:'발표 심사 · 관람 학생 투표'}],
+    schedule:[{date:'11. 16.(월)',label:'서류 검토 · 발표 순서 안내'},{date:'11. 17.(화) 19:00 ~',label:'발표 심사 · 관람 학생 투표'}],
+    applyStart:'2026-11-04T00:00',applyEnd:'2026-11-11T23:59',workStart:'2026-11-04T00:00',workEnd:'2026-11-15T23:59',allowLate:true,
     deadline:'2026-11-15T23:59',contact:'영재교육정보부 정보과',registerOpen:true,submitOpen:true,voteOpen:true,voteMode:'perTeam',showVotes:true,showcaseDate:'2026-11-17'};
   var forms={apply:{name:'2026 전곽 SW경진대회 참가신청서.hwpx',url:'#',at:now-D},report:{name:'2026 전곽 SW경진대회 결과보고서.hwpx',url:'#',at:now-D},ai:{name:'AI 활용 기록지.hwpx',url:'#',at:now-D}};
   var teams=[
@@ -602,7 +621,7 @@ var DEMO=(function(){
     adminSetFolder:function(pw,link){ adm(pw); if(!/folders\/|^[A-Za-z0-9_-]{10,}$/.test(String(link||'').trim())) throw new Error('드라이브 폴더 주소를 확인해 주세요. (https://drive.google.com/drive/folders/... 형식)'); var vs={}; votes.forEach(function(v){vs[v.v]=1;}); return {teams:teams.map(function(t){var d=det(t); d.votes=cnt(t.id); return d;}),voterCount:Object.keys(vs).length,sheetUrl:'#',folderUrl:'#',folderName:'(미리보기) 연결한 폴더',sheetName:'2026 전곽 SW 경시대회 참가팀',live:false}; },
     adminUploadForm:function(pw,k,f){ adm(pw); forms[k]={name:f.name,url:'#',at:Date.now()}; return getPublic(); },
     adminRemoveForm:function(pw,k){ adm(pw); delete forms[k]; return getPublic(); },
-    adminSaveSettings:function(pw,s){ adm(pw); settings=s; return getPublic(); },
+    adminSaveSettings:function(pw,s){ adm(pw); if(s.applyStart&&s.applyEnd&&s.applyStart>s.applyEnd) throw new Error('신청서 제출 기간: 시작이 마감보다 늦습니다.'); if(s.workStart&&s.workEnd&&s.workStart>s.workEnd) throw new Error('작품 제출 기간: 시작이 마감보다 늦습니다.'); s.deadline=s.workEnd; settings=s; return getPublic(); },
     adminResetPassword:function(pw,id,np){ adm(pw); find(id).pw=np; return true; },
     adminDeleteTeam:function(pw,id){ adm(pw); teams=teams.filter(function(x){return x.id!==id;}); votes=votes.filter(function(v){return v.t!==id;}); return true; },
     adminResetVotes:function(pw){ adm(pw); votes=[]; return true; }
@@ -648,8 +667,36 @@ function checkFileName(input,team,k){
   if(normName(f.name).indexOf(normName(team))<0) return '파일 이름에 팀명이 없습니다. ‘'+nameRule(team,k)+'’처럼 이름을 바꾼 뒤 다시 올려 주세요. (지금 이름: '+f.name+')';
   return null;
 }
-function deadlineMs(){ var d=S.pub&&S.pub.settings.deadline; var ms=d?new Date(d).getTime():NaN; return isNaN(ms)?null:ms; }
-function isLate(at){ var d=deadlineMs(); return !!(d&&at&&Number(at)>d+59999); }
+/* 제출 기간: 관리자 설정('YYYY-MM-DDTHH:mm', 한국 시간)으로 계산 */
+function kst(v){ v=String(v||''); if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)) return null; var ms=new Date(v+':00+09:00').getTime(); return isNaN(ms)?null:ms; }
+var WD='일월화수목금토';
+function kparts(v){ var ms=kst(v); if(ms===null) return null; var d=new Date(ms+9*3600e3); return {y:d.getUTCFullYear(),m:d.getUTCMonth()+1,d:d.getUTCDate(),w:WD.charAt(d.getUTCDay()),hh:('0'+d.getUTCHours()).slice(-2),mm:('0'+d.getUTCMinutes()).slice(-2)}; }
+function kDate(v,year){ var p=kparts(v); return p?((year?p.y+'. ':'')+p.m+'. '+p.d+'.('+p.w+')'):''; }
+function kDateTime(v){ var p=kparts(v); return p?(p.m+'. '+p.d+'.('+p.w+') '+p.hh+':'+p.mm):''; }
+function endOf(which){ var st=S.pub&&S.pub.settings; return st?kst(which==='apply'?st.applyEnd:(st.workEnd||st.deadline)):null; }
+function nowMs(){ return Date.now()+(S.skew||0); }
+function phase(which){
+  var st=S.pub.settings; if(which==='apply'?!st.registerOpen:!st.submitOpen) return 'off';
+  var a=kst(which==='apply'?st.applyStart:st.workStart), b=endOf(which), n=nowMs();
+  if(a!==null&&n<a) return 'before'; if(b!==null&&n>b+59999) return st.allowLate?'late':'closed'; return 'open';
+}
+function canSend(which){ var p=phase(which); return p==='open'||p==='late'; }
+function phaseMsg(which){
+  var st=S.pub.settings, p=phase(which), what=which==='apply'?'참가 신청서':'작품';
+  if(p==='off') return what+' 접수가 멈춰 있습니다.';
+  if(p==='before') return what+' 제출 기간 전입니다. ('+kDateTime(which==='apply'?st.applyStart:st.workStart)+'부터)';
+  if(p==='closed') return what+' 제출이 마감되었습니다. ('+kDateTime(which==='apply'?st.applyEnd:st.workEnd)+' 마감)';
+  if(p==='late') return '마감('+kDateTime(which==='apply'?st.applyEnd:st.workEnd)+')이 지났습니다. 지금 올리면 ‘마감 후’로 표시되어 감점됩니다.';
+  return '';
+}
+function whichOf(k){ return k==='apply'?'apply':'work'; }
+function isLate(at,which){ var d=endOf(which||'work'); return !!(d&&at&&Number(at)>d+59999); }
+function periodText(which){
+  var st=S.pub.settings, a=which==='apply'?st.applyStart:st.workStart, b=which==='apply'?st.applyEnd:st.workEnd;
+  if(!b) return '미정';
+  if(which==='work' && (!a || a<=st.applyStart)) return kDate(b,true);
+  return (a?kDate(a,true)+' ~ ':'~ ')+kDate(b,true);
+}
 function armed(btn,label){
   if(btn.classList.contains('armed')) return true;
   btn.classList.add('armed'); var old=btn.textContent; btn.textContent=label||'한 번 더 누르면 삭제';
@@ -668,7 +715,8 @@ document.addEventListener('click',function(e){ var g=e.target.closest('[data-go]
 setTab('guide');
 
 /* ───────── 공개 화면 ───────── */
-function load(){ return api('getPublic').then(function(p){ S.pub=p; $('connBar').hidden=true; renderAll(); })
+var lastLoad=0;
+function load(){ return api('getPublic').then(function(p){ S.pub=p; lastLoad=Date.now(); $('connBar').hidden=true; renderAll(); stampSync(); })
   .catch(function(e){ $('connMsg').textContent=e.message; $('connBar').hidden=false; if(!S.pub){ $('notice').textContent='대회 정보를 불러오지 못했습니다. 화면 맨 위 안내를 확인해 주세요.'; renderOffline(); } throw e; }); }
 /* 양식 파일: 관리자가 웹앱에 올린 파일이 있으면 그것을, 없으면 GitHub 저장소 forms 폴더의 기본 양식을 씀 */
 var FORM_BASE='https://ifrfcom-hue.github.io/2026softwarecontest/forms/';
@@ -683,6 +731,11 @@ function renderForms(forms){
       '<div class="fn">'+esc(name)+'</div><div><a class="btn sm primary" href="'+esc(url)+'"'+((up||!/\.github\.io$/.test(location.hostname))?' target="_blank" rel="noopener"':' download="'+esc(name)+'"')+'>양식 내려받기</a></div></div>';
   }).join('');
 }
+function stampSync(){ var d=new Date(), p=function(n){return ('0'+n).slice(-2);}; var el=$('syncAt'); if(el) el.textContent='갱신 '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); }
+/* 다른 기기에서 등록·제출·투표한 내용이 30초마다 자동으로 반영됨 (팀 창이 열려 있을 때는 잠시 멈춤) */
+function autoRefresh(){ if(document.visibilityState!=='visible' || isDlgOpen() || !LIVE) return; if(Date.now()-lastLoad<25000) return; load().catch(function(){}); }
+setInterval(autoRefresh,30000);
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && Date.now()-lastLoad>15000) autoRefresh(); });
 function renderOffline(){
   var msg='<div class="empty" style="grid-column:1/-1">서버와 연결되면 여기에 표시됩니다.</div>';
   ['teams','voteList'].forEach(function(id){ $(id).innerHTML=msg; }); renderForms({});
@@ -695,13 +748,21 @@ $('connRetry').addEventListener('click',function(){ $('connMsg').textContent='�
 function renderAll(){
   var p=S.pub, s=p.settings;
   $('notice').textContent=s.notice;
+  if(p.serverNow) S.skew=p.serverNow-Date.now();
+  var PL={open:'접수 중',late:'마감(늦은 제출 가능)',before:'접수 예정',closed:'마감',off:'멈춤'};
+  var pa=phase('apply'), pw=phase('work');
   $('statusChips').innerHTML=
-    '<span class="chip '+(s.registerOpen?'on':'off')+'"><i></i>팀 등록 '+(s.registerOpen?'접수 중':'마감')+'</span>'+
-    '<span class="chip '+(s.submitOpen?'on':'off')+'"><i></i>작품 제출 '+(s.submitOpen?'접수 중':'마감')+'</span>'+
+    '<span class="chip '+(pa==='open'?'on':'off')+'"><i></i>참가 신청 '+PL[pa]+'</span>'+
+    '<span class="chip '+(pw==='open'?'on':'off')+'"><i></i>작품 제출 '+PL[pw]+'</span>'+
     '<span class="chip '+(s.voteOpen?'on':'off')+'"><i></i>팀 평가 '+(s.voteOpen?'진행 중':'대기')+'</span>'+
     '<span class="chip '+(p.showcaseToday?'on':'off')+'"><i></i>작품 공개 '+(p.showcaseToday?'오늘':showDateLabel())+'</span>';
-  Array.prototype.forEach.call(document.querySelectorAll('[data-go="register"]'),function(b){ b.disabled=!s.registerOpen; });
-  $('schedule').innerHTML=(s.schedule||[]).map(function(x){ return '<li><span class="d">'+esc(x.date)+'</span><span class="l">'+esc(x.label)+'</span></li>'; }).join('')||'<li class="muted">일정이 아직 등록되지 않았습니다.</li>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-go="register"]'),function(b){ b.disabled=!canSend('apply'); b.title=canSend('apply')?'':phaseMsg('apply'); });
+  $('perApply').textContent=periodText('apply'); $('perWork').textContent=periodText('work');
+  $('stepApply').textContent='~'+kDate(s.applyEnd)+' '+(kparts(s.applyEnd)||{hh:''}).hh+':'+(kparts(s.applyEnd)||{mm:''}).mm;
+  $('stepWork').textContent=kDateTime(s.workEnd||s.deadline);
+  var autoSch=[{date:(s.applyStart?kDate(s.applyStart)+' ~ ':'~ ')+kDate(s.applyEnd),label:'참가 신청서 제출'},{date:kDateTime(s.workEnd),label:'작품&산출물 제출 마감'}].filter(function(x){return x.date.replace(/[~ ]/g,'');});
+  var restSch=(s.schedule||[]).filter(function(x){ return !/신청서\s*제출|작품.*제출|산출물/.test(x.label); });
+  $('schedule').innerHTML=autoSch.concat(restSch).map(function(x){ return '<li><span class="d">'+esc(x.date)+'</span><span class="l">'+esc(x.label)+'</span></li>'; }).join('')||'<li class="muted">일정이 아직 등록되지 않았습니다.</li>';
   $('score').innerHTML=SCORE.map(function(r){ return '<div><div class="srow"><div class="nm">'+r[0]+'<small>'+r[1]+'</small></div><div class="bar"><i style="width:'+(r[2]/25*100)+'%"></i></div><div class="pt">'+r[2]+'</div></div>'+
     '<details class="crit"><summary>상·하 기준 보기</summary><p style="margin-top:6px"><b style="color:var(--ok)">상(90% 이상)</b> '+r[3]+'</p><p><b style="color:var(--bad)">하(60% 미만)</b> '+r[4]+'</p></details></div>'; }).join('');
   renderForms(p.forms);
@@ -773,8 +834,14 @@ $('voteList').addEventListener('click',function(e){
 
 /* ───────── 시트 ───────── */
 var dlg=$('dlg'), sheet=$('sheet');
-function openSheet(html,wide){ sheet.className='sheet'+(wide?' wide':''); sheet.innerHTML=html; if(!dlg.open) dlg.showModal(); sheet.scrollTop=0; }
-function closeSheet(){ if(dlg.open) dlg.close(); }
+/* 오래된 휴대폰(iOS 15.3 이하 등)은 dialog를 지원하지 않아 대체 방식으로 엶 */
+var NATIVE_DLG=typeof dlg.showModal==='function';
+if(!NATIVE_DLG) document.documentElement.classList.add('no-dialog');
+function isDlgOpen(){ return NATIVE_DLG ? dlg.open : dlg.hasAttribute('open'); }
+function openSheet(html,wide){ sheet.className='sheet'+(wide?' wide':''); sheet.innerHTML=html;
+  if(!isDlgOpen()){ if(NATIVE_DLG) dlg.showModal(); else { dlg.setAttribute('open',''); document.body.style.overflow='hidden'; } } sheet.scrollTop=0; }
+function closeSheet(){ if(!isDlgOpen()) return; if(NATIVE_DLG) dlg.close(); else { dlg.removeAttribute('open'); document.body.style.overflow=''; } }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !NATIVE_DLG) closeSheet(); });
 dlg.addEventListener('click',function(e){ if(e.target===dlg) closeSheet(); });
 function head(tag,title){ return '<div class="sheet-head"><div><span class="tag">'+tag+'</span><h2>'+esc(title)+'</h2></div><button class="x" type="button" data-act="close" aria-label="닫기">×</button></div>'; }
 
@@ -792,6 +859,7 @@ function collect(p){ return {teamName:$(p+'name').value.trim(),field:$(p+'field'
 
 function openRegister(){
   if(needServer()) return;
+  if(!canSend('apply')){ toast(phaseMsg('apply')); return; }
   openSheet(head('NEW TEAM','팀 등록')+
   '<form class="box" id="regForm" autocomplete="off">'+teamFields('r_')+
     '<div class="field"><label for="r_file">참가 신청서 파일</label><input type="file" id="r_file" accept=".hwp,.hwpx,.pdf,.doc,.docx"><span class="hint">파일 이름은 <b>팀명-참가신청서</b>로 바꿔서 올려 주세요. 지금 올리지 않아도 등록 후 팀 화면에서 올릴 수 있습니다.</span></div>'+
@@ -812,11 +880,12 @@ function openRegister(){
 }
 
 var CUR_TEAM='팀명';
-function fileBox(k,f,open){
-  var h='<div class="filebox"><div class="top"><strong>'+KIND[k]+'</strong>'+(f?'<span class="badges"><span class="badge ok">제출 '+fmt(f.at)+'</span>'+(isLate(f.at)?'<span class="badge late">마감 후</span>':'')+'</span>':'<span class="badge">미제출</span>')+'</div>';
+function fileBox(k,f){
+  var w=whichOf(k), open=canSend(w), st=S.pub.settings;
+  var h='<div class="filebox"><div class="top"><strong>'+KIND[k]+' <span class="muted mono" style="font-weight:400;font-size:12px">'+esc(kDateTime(w==='apply'?st.applyEnd:st.workEnd))+' 마감</span></strong>'+(f?'<span class="badges"><span class="badge ok">제출 '+fmt(f.at)+'</span>'+(isLate(f.at,w)?'<span class="badge late">마감 후</span>':'')+'</span>':'<span class="badge">미제출</span>')+'</div>';
   if(f) h+='<div class="name">'+esc(f.name)+'</div>';
   if(open) h+='<div class="muted" style="font-size:12px">파일 이름: <b class="mono" style="color:var(--cyan)">'+esc(nameRule(CUR_TEAM,k))+'</b></div>';
-  if(!open) h+='<div class="muted" style="font-size:13px">작품 제출 기간이 아닙니다.</div>';
+  var pm=phaseMsg(w); if(pm) h+='<div style="font-size:13px;color:'+(phase(w)==='late'?'var(--warn)':'var(--muted)')+'">'+esc(pm)+'</div>';
   h+='<div class="actions">';
   if(f) h+='<a class="btn sm" href="'+esc(f.url)+'" target="_blank" rel="noopener">열기</a>';
   if(open) h+='<label class="btn sm primary" for="up_'+k+'">'+(f?'다른 파일로 바꾸기':'파일 올리기')+'</label><input type="file" id="up_'+k+'" accept=".hwp,.hwpx,.pdf,.doc,.docx,.ppt,.pptx,.zip" hidden>';
@@ -852,12 +921,14 @@ function renderTeam(id){
       api('unlockTeam',id,pw).then(function(d){ S.keys[id]={pw:pw,detail:d}; renderTeam(id); }).catch(function(e2){ $('u_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
     return;
   }
-  h+='<form class="box" id="workForm" autocomplete="off"><h3>작품 URL <span class="muted" style="font-weight:400;font-size:12px">마감 11. 15.(일) 23:59</span></h3>'+
-    '<div class="field"><label for="w_url">작품을 바로 열어 볼 수 있는 주소</label><input type="url" id="w_url" maxlength="300" placeholder="https://..." value="'+esc(t.workUrl)+'"'+(s.submitOpen?'':' disabled')+'>'+
+  var wOpen=canSend('work');
+  h+='<form class="box" id="workForm" autocomplete="off"><h3>작품 URL <span class="muted" style="font-weight:400;font-size:12px">'+esc(kDateTime(s.workEnd))+' 마감</span></h3>'+
+    '<div class="field"><label for="w_url">작품을 바로 열어 볼 수 있는 주소</label><input type="url" id="w_url" maxlength="300" placeholder="https://..." value="'+esc(t.workUrl)+'"'+(wOpen?'':' disabled')+'>'+
     '<span class="hint">배포한 웹·앱 주소, 실행 화면 영상, 다운로드 링크 등. 다른 팀에게는 '+(S.pub.showcaseToday?'오늘(대회 당일) 공개 중입니다.':showDateLabel()+' 대회 당일에만 보입니다.')+'</span></div>'+
-    (t.workUrl?'<div class="actions" style="align-items:center"><a class="btn sm" href="'+esc(t.workUrl)+'" target="_blank" rel="noopener">열어서 확인 ↗</a>'+(t.workAt?'<span class="badge '+(isLate(t.workAt)?'late':'ok')+'">'+(isLate(t.workAt)?'마감 후 ':'등록 ')+fmt(t.workAt)+'</span>':'')+'</div>':'')+
-    '<div class="err" id="w_err"></div>'+(s.submitOpen?'<div class="actions"><button class="btn primary" type="submit">작품 URL 저장</button></div>':'<span class="muted" style="font-size:13px">작품 제출 기간이 아닙니다.</span>')+'</form>';
-  h+='<div class="box"><h3>제출 파일 <span class="muted" style="font-weight:400;font-size:12px">마감 11. 15.(일) 23:59</span></h3>'+fileBox('apply',t.apply,s.submitOpen)+fileBox('report',t.report,s.submitOpen)+fileBox('ai',t.ai,s.submitOpen)+'<div class="err" id="f_err"></div></div>';
+    (t.workUrl?'<div class="actions" style="align-items:center"><a class="btn sm" href="'+esc(t.workUrl)+'" target="_blank" rel="noopener">열어서 확인 ↗</a>'+(t.workAt?'<span class="badge '+(isLate(t.workAt,'work')?'late':'ok')+'">'+(isLate(t.workAt,'work')?'마감 후 ':'등록 ')+fmt(t.workAt)+'</span>':'')+'</div>':'')+
+    (phaseMsg('work')?'<div style="font-size:13px;color:'+(phase('work')==='late'?'var(--warn)':'var(--muted)')+'">'+esc(phaseMsg('work'))+'</div>':'')+
+    '<div class="err" id="w_err"></div>'+(wOpen?'<div class="actions"><button class="btn primary" type="submit">작품 URL 저장</button></div>':'')+'</form>';
+  h+='<div class="box"><h3>제출 파일</h3>'+fileBox('apply',t.apply)+fileBox('report',t.report)+fileBox('ai',t.ai)+'<div class="err" id="f_err"></div></div>';
   h+='<form class="box" id="editForm" autocomplete="off"><h3>팀 정보 · 링크</h3>'+teamFields('e_',t)+
     '<div class="field"><label for="e_src">소스코드 위치 (GitHub 주소)</label><input type="url" id="e_src" maxlength="300" placeholder="https://github.com/..." value="'+esc(t.sourceUrl)+'"></div>'+
     '<div class="field"><label for="e_vid">시연 영상 링크 (3분 이내)</label><input type="url" id="e_vid" maxlength="300" placeholder="https://..." value="'+esc(t.videoUrl)+'"></div>'+
@@ -920,27 +991,32 @@ function renderAdmin(){
     '<div class="actions"><a class="btn sm primary" href="'+esc(d.folderUrl)+'" target="_blank" rel="noopener">제출 폴더 열기</a><a class="btn sm" href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">참가팀·투표 시트 열기</a></div>'+
     '<form id="folderForm" class="field" style="margin-top:6px"><label for="adm_fnew">저장 폴더 바꾸기</label><div class="actions" style="flex-wrap:nowrap"><input type="text" id="adm_fnew" placeholder="https://drive.google.com/drive/folders/..." style="flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);background:rgba(0,0,0,.3)"><button class="btn sm" type="submit">연결</button></div>'+
     '<span class="hint">원하는 드라이브 폴더를 열어 주소창 주소를 붙여 넣으세요. 이후 제출물과 시트가 그 폴더로 갑니다. 이미 받은 파일은 원래 폴더에 남습니다.</span></form><div class="err" id="fd_err"></div></div>';
-  h+='<form class="box" id="setForm"><h3>접수·투표 설정</h3><div class="toggles">'+
-    '<label><input type="checkbox" id="s_reg"'+(s.registerOpen?' checked':'')+'> 팀 등록 받기</label>'+
+  var dtIn=function(id,v){ return '<input type="datetime-local" id="'+id+'" value="'+esc(v||'')+'" style="width:100%;padding:10px 12px;border:1px solid var(--line);background:rgba(0,0,0,.3)">'; };
+  h+='<form class="box" id="setForm"><h3>제출 기간 <span class="muted" style="font-weight:400;font-size:12px">한국 시간 · 저장하면 안내 화면 날짜와 제출 허용이 함께 바뀝니다</span></h3>'+
+    '<div class="period"><div class="lb">참가 신청서 · 팀 등록</div><div class="row2"><div class="field"><label for="s_as">시작</label>'+dtIn('s_as',s.applyStart)+'</div><div class="field"><label for="s_ae">마감</label>'+dtIn('s_ae',s.applyEnd)+'</div></div><span class="hint">지금: '+({open:'접수 중',late:'마감 지남 (늦은 제출 받는 중)',before:'시작 전',closed:'마감',off:'멈춤'})[phase('apply')]+'</span></div>'+
+    '<div class="period"><div class="lb">작품 URL · 결과보고서 · AI 활용 기록지</div><div class="row2"><div class="field"><label for="s_ws">시작</label>'+dtIn('s_ws',s.workStart)+'</div><div class="field"><label for="s_we">마감</label>'+dtIn('s_we',s.workEnd||s.deadline)+'</div></div><span class="hint">지금: '+({open:'접수 중',late:'마감 지남 (늦은 제출 받는 중)',before:'시작 전',closed:'마감',off:'멈춤'})[phase('work')]+'</span></div>'+
+    '<div class="toggles"><label><input type="checkbox" id="s_late"'+(s.allowLate?' checked':'')+'> 마감 뒤에도 받기 (‘마감 후’로 표시, 감점 확인용)</label></div>'+
+    '<h3 style="margin-top:6px">접수·투표 설정</h3><div class="toggles">'+
+    '<label><input type="checkbox" id="s_reg"'+(s.registerOpen?' checked':'')+'> 참가 신청 받기</label>'+
     '<label><input type="checkbox" id="s_sub"'+(s.submitOpen?' checked':'')+'> 작품 제출 받기</label>'+
     '<label><input type="checkbox" id="s_vote"'+(s.voteOpen?' checked':'')+'> 팀 평가 투표 열기</label>'+
     '<label><input type="checkbox" id="s_show"'+(s.showVotes?' checked':'')+'> 득표수 공개</label></div>'+
-    '<div class="row2"><div class="field"><label for="s_mode">투표 방식</label><select id="s_mode"><option value="perTeam"'+(s.voteMode!=='single'?' selected':'')+'>팀마다 한 번씩</option><option value="single"'+(s.voteMode==='single'?' selected':'')+'>1인 1팀 (운영계획 기준)</option></select></div>'+
-    '<div class="field"><label for="s_dl">제출 마감 (이후 제출은 ‘마감 후’ 표시)</label><input type="datetime-local" id="s_dl" value="'+esc(s.deadline)+'"></div></div>'+
+    '<span class="hint" style="font-size:12px;color:var(--muted)">체크를 끄면 기간과 상관없이 즉시 멈춥니다.</span>'+
+    '<div class="field"><label for="s_mode">투표 방식</label><select id="s_mode"><option value="perTeam"'+(s.voteMode!=='single'?' selected':'')+'>팀마다 한 번씩</option><option value="single"'+(s.voteMode==='single'?' selected':'')+'>1인 1팀 (운영계획 기준)</option></select></div>'+
     '<div class="field"><label for="s_show_d">작품 공개일 (이날 하루만 다른 팀이 작품 링크를 볼 수 있음)</label><input type="date" id="s_show_d" value="'+esc(s.showcaseDate||'')+'" style="padding:10px 12px;border:1px solid var(--line);background:rgba(0,0,0,.3)"><span class="hint">'+(S.pub.showcaseToday?'오늘이 공개일이라 지금 작품 링크가 보이는 중입니다.':'비워 두면 공개하지 않습니다.')+'</span></div>'+
     '<div class="field"><label for="s_notice">안내문</label><textarea id="s_notice">'+esc(s.notice)+'</textarea></div>'+
-    '<div class="field"><label for="s_sched">일정 (한 줄에 하나, 날짜 | 내용)</label><textarea id="s_sched" rows="4">'+esc((s.schedule||[]).map(function(x){return x.date+' | '+x.label;}).join('\n'))+'</textarea></div>'+
+    '<div class="field"><label for="s_sched">그 밖의 일정 (한 줄에 하나, 날짜 | 내용 · 신청서·작품 제출 일정은 위 기간으로 자동 표시)</label><textarea id="s_sched" rows="4">'+esc((s.schedule||[]).map(function(x){return x.date+' | '+x.label;}).join('\n'))+'</textarea></div>'+
     '<div class="field"><label for="s_contact">문의처</label><input type="text" id="s_contact" value="'+esc(s.contact)+'"></div>'+
     '<div class="err" id="s_err"></div><div class="actions"><button class="btn primary" type="submit">저장</button></div></form>';
   h+='<div class="box"><h3>양식 올리기</h3>'+['apply','report','ai'].map(function(k){
     return '<div class="filebox"><div class="top"><strong>'+KIND[k]+'</strong>'+(f[k]?'<span class="badge ok">게시 중</span>':'<span class="badge">없음</span>')+'</div>'+(f[k]?'<div class="name">'+esc(f[k].name)+'</div>':'')+
       '<div class="actions"><label class="btn sm primary" for="fm_'+k+'">'+(f[k]?'바꾸기':'올리기')+'</label><input type="file" id="fm_'+k+'" hidden>'+
       (f[k]?'<a class="btn sm" href="'+esc(f[k].url)+'" target="_blank" rel="noopener">열기</a><button class="btn sm danger" type="button" data-act="adm-rmform" data-kind="'+k+'">내리기</button>':'')+'</div></div>'; }).join('')+'<div class="err" id="fm_err"></div></div>';
-  var fl=function(x){ return x?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.name)+'</a><div class="mono muted">'+fmt(x.at)+(isLate(x.at)?' <span class="badge late">마감 후</span>':'')+'</div>':'<span class="muted">미제출</span>'; };
+  var fl=function(x,w){ return x?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.name)+'</a><div class="mono muted">'+fmt(x.at)+(isLate(x.at,w)?' <span class="badge late">마감 후</span>':'')+'</div>':'<span class="muted">미제출</span>'; };
   h+='<div class="box"><h3>참가 팀 ('+d.teams.length+')</h3><div class="tbl-wrap admin-tbl"><table><thead><tr><th>팀명</th><th>대표 / 팀원</th><th>분야 · 형태 · 프로젝트</th><th>신청서</th><th>결과보고서</th><th>AI 기록지</th><th>작품·링크</th><th>득표</th><th>관리</th></tr></thead><tbody>'+
     (d.teams.length?d.teams.map(function(t){
       return '<tr><td><strong>'+esc(t.teamName)+'</strong><div class="mono muted">#'+esc(t.id)+'</div></td><td>'+esc(t.leader)+'<div class="muted">'+esc(t.members)+'</div></td><td>'+esc(t.field)+' · '+esc(t.devType)+'<div class="muted">'+esc(t.project)+'</div></td>'+
-        '<td>'+fl(t.apply)+'</td><td>'+fl(t.report)+'</td><td>'+fl(t.ai)+'</td><td>'+(t.workUrl?'<a href="'+esc(t.workUrl)+'" target="_blank" rel="noopener"><b>작품</b></a>'+(isLate(t.workAt)?' <span class="badge late">마감 후</span>':'')+'<br>':'')+(t.sourceUrl?'<a href="'+esc(t.sourceUrl)+'" target="_blank" rel="noopener">코드</a><br>':'')+(t.videoUrl?'<a href="'+esc(t.videoUrl)+'" target="_blank" rel="noopener">영상</a>':'')+'</td>'+
+        '<td>'+fl(t.apply,'apply')+'</td><td>'+fl(t.report,'work')+'</td><td>'+fl(t.ai,'work')+'</td><td>'+(t.workUrl?'<a href="'+esc(t.workUrl)+'" target="_blank" rel="noopener"><b>작품</b></a>'+(isLate(t.workAt,'work')?' <span class="badge late">마감 후</span>':'')+'<br>':'')+(t.sourceUrl?'<a href="'+esc(t.sourceUrl)+'" target="_blank" rel="noopener">코드</a><br>':'')+(t.videoUrl?'<a href="'+esc(t.videoUrl)+'" target="_blank" rel="noopener">영상</a>':'')+'</td>'+
         '<td class="mono">'+(t.votes||0)+'</td><td><div class="actions" style="flex-direction:column;align-items:flex-start"><button class="btn sm" type="button" data-act="adm-reset" data-id="'+esc(t.id)+'">비번 초기화</button><button class="btn sm danger" type="button" data-act="adm-del" data-id="'+esc(t.id)+'">삭제</button></div></td></tr>';
     }).join(''):'<tr><td colspan="9" class="muted">아직 등록한 팀이 없습니다.</td></tr>')+'</tbody></table></div><div class="err" id="t_err"></div>'+
     '<div class="actions"><button class="btn sm danger" type="button" data-act="adm-resetvotes">투표 기록 모두 지우기</button></div></div>';
@@ -953,7 +1029,7 @@ function renderAdmin(){
     api('adminSetFolder',S.admin.pw,v).then(function(d2){ S.admin.data=d2; renderAdmin(); toast('저장 폴더를 ‘'+d2.folderName+'’(으)로 연결했습니다.'); }).catch(function(e2){ $('fd_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
   $('setForm').addEventListener('submit',function(e){ e.preventDefault();
     var sch=$('s_sched').value.split('\n').map(function(l){ var p=l.split('|'); return {date:(p[0]||'').trim(),label:p.slice(1).join('|').trim()}; }).filter(function(x){return x.date||x.label;});
-    var ns={notice:$('s_notice').value.trim(),schedule:sch,deadline:$('s_dl').value,contact:$('s_contact').value.trim(),registerOpen:$('s_reg').checked,submitOpen:$('s_sub').checked,voteOpen:$('s_vote').checked,voteMode:$('s_mode').value,showVotes:$('s_show').checked,showcaseDate:$('s_show_d').value};
+    var ns={notice:$('s_notice').value.trim(),schedule:sch,applyStart:$('s_as').value,applyEnd:$('s_ae').value,workStart:$('s_ws').value,workEnd:$('s_we').value,allowLate:$('s_late').checked,contact:$('s_contact').value.trim(),registerOpen:$('s_reg').checked,submitOpen:$('s_sub').checked,voteOpen:$('s_vote').checked,voteMode:$('s_mode').value,showVotes:$('s_show').checked,showcaseDate:$('s_show_d').value};
     busy(sheet,true);
     api('adminSaveSettings',S.admin.pw,ns).then(function(p){ S.pub=p; renderAll(); toast('설정을 저장했습니다.'); return refreshAdmin(); })
       .catch(function(e2){ $('s_err').textContent=e2.message; }).then(function(){ busy(sheet,false); }); });
